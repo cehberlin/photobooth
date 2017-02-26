@@ -10,6 +10,10 @@ COUNTER_FONT_SIZE = 140
 MOUSE_LEFT = 1
 MOUSE_RIGHT = 3
 
+PHOTO_TIMEOUT = 10
+PHOTO_COUNTDOWN = 5
+PHOTO_SHOW_TIME = 5
+
 class PhotoBoothState(object):
 
     def __init__(self, photobooth, next_state, counter_callback=None, counter_callback_args=None, counter=-1):
@@ -169,15 +173,40 @@ class StateWaitingForCamera(PhotoBoothState):
             time.sleep(30)
 
 
-class StateWaitingForPhotoTrigger(PhotoBoothState):
+class StateShowSlideShow(PhotoBoothState):
     def __init__(self, photobooth, next_state):
         super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state)
 
     def update_callback(self):
         if mouse_pressed():
             self.photobooth.state = self.next_state
+        #TODO EXTEND TO REAL SLIDESHOW
+        show_cam_picture(self.photobooth.screen, app.last_photo)
+
+        show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), 36)
+
+    def reset(self):
+        super(self.__class__, self).reset()
+        if self.photobooth.cam:
+            self.photobooth.cam.set_idle()
+
+
+class StateWaitingForPhotoTrigger(PhotoBoothState):
+    def __init__(self, photobooth, next_state, timeout_state = None, counter=-1):
+        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
+        self.timeout_state=timeout_state
+
+    def update_callback(self):
+        if mouse_pressed():
+            self.photobooth.state = self.next_state
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
+
+    def _switch_timeout_state(self):
+        if self.timeout_state:
+            self.photobooth.state = self.timeout_state
+        else:
+            self.reset()
 
 
 class StatePhotoTrigger(PhotoBoothState):
@@ -224,13 +253,16 @@ if __name__ == '__main__':
     app = PhotoBooth()
 
     # Create all states
-    state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=5)
+    state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
 
-    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=5)
+    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
 
-    state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo)
+    timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None)
+
+    state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo, timeout_state=timeout_slide_show, counter=PHOTO_TIMEOUT)
 
     state_show_photo.next_state = state_waiting_for_photo_trigger
+    timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger)
 
