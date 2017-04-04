@@ -2,7 +2,7 @@ import piggyphoto
 import pygame
 import time
 
-from io import ButtonRail, PushButton
+from io import ButtonRail, PushButton, LedState
 
 DEFAULT_RESOLUTION = [640,424]
 
@@ -191,21 +191,21 @@ def show_text(screen, text, pos, size=DEFAULT_FONT_SIZE):
 
 class StateWaitingForCamera(PhotoBoothState):
     def __init__(self, photobooth, next_state):
-        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state)
+        super(StateWaitingForCamera, self).__init__(photobooth=photobooth, next_state=next_state)
 
     def update_callback(self):
         # try initialisation again
         try:
             self.photobooth.init_camera()
             self.photobooth.state = self.next_state
-        except Exception, e:
+        except Exception as e:
             show_text(self.photobooth.screen, "Camera not connected: "+str(e), get_text_mid_position(self.photobooth.app_resolution))
             time.sleep(30)
 
 
 class StateShowSlideShow(PhotoBoothState):
     def __init__(self, photobooth, next_state):
-        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state)
+        super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state)
 
     def update_callback(self):
         if mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
@@ -217,14 +217,14 @@ class StateShowSlideShow(PhotoBoothState):
         show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), 36)
 
     def reset(self):
-        super(self.__class__, self).reset()
+        super(StateShowSlideShow, self).reset()
         if self.photobooth.cam:
             self.photobooth.cam.set_idle()
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
     def __init__(self, photobooth, next_state, timeout_state = None, counter=-1):
-        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
+        super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
         self.timeout_state=timeout_state
 
     def update_callback(self):
@@ -240,16 +240,12 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             self.reset()
 
     def reset(self):
-        super(self.__class__, self).reset()
-        self.photobooth.io_manager.push_buttons[0].led_on()
-        self.photobooth.io_manager.push_buttons[1].led_on()
-        self.photobooth.io_manager.push_buttons[2].led_on()
-        self.photobooth.io_manager.push_buttons[3].led_on()
-
+        super(StateWaitingForPhotoTrigger, self).reset()
+        self.photobooth.io_manager.set_all_led(LedState.ON)
 
 class StatePhotoTrigger(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter=-1):
-        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._take_photo)
+        super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._take_photo)
 
     def update_callback(self):
 
@@ -257,39 +253,26 @@ class StatePhotoTrigger(PhotoBoothState):
         show_cam_picture(self.photobooth.screen, preview_img)
         # Show countdown
         show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), 140)
-        if self.counter == 4:
-            self.photobooth.io_manager.push_buttons[0].led_off()
-        if self.counter == 3:
-            self.photobooth.io_manager.push_buttons[1].led_off()
-        if self.counter == 2:
-            self.photobooth.io_manager.push_buttons[2].led_off()
-        if self.counter == 1:
-            self.photobooth.io_manager.push_buttons[3].led_off()
-
+        self.photobooth.io_manager.show_led_coutdown(self.counter)
+        
     def _take_photo(self):
         #first update to latest preview
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
         pygame.display.update()
-        self.photobooth.io_manager.push_buttons[0].led_on()
-        self.photobooth.io_manager.push_buttons[1].led_on()
-        self.photobooth.io_manager.push_buttons[2].led_on()
-        self.photobooth.io_manager.push_buttons[3].led_on()
+        self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         #take photo
         self.photobooth.cam.take_photo(self.photobooth)
 
-        self.photobooth.io_manager.push_buttons[0].led_off()
-        self.photobooth.io_manager.push_buttons[1].led_off()
-        self.photobooth.io_manager.push_buttons[2].led_off()
-        self.photobooth.io_manager.push_buttons[3].led_off()
+        self.photobooth.io_manager.set_all_led(LedState.ON)
 
         self.photobooth.state = self.next_state
 
 
 class StateShowPhoto(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter=-1):
-        super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
+        super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo)
@@ -335,7 +318,7 @@ if __name__ == '__main__':
             pygame.event.pump()
             #pygame.event.clear()
 
-        except Exception, e:
+        except Exception as e:
             print(e)
             show_text(app.screen, "Error", get_text_mid_position(self.photobooth.app_resolution))
         pygame.display.update()

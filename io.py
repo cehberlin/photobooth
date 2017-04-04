@@ -57,10 +57,17 @@ class PushButton(object):
         self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
 
     def led_on(self):
-        GPIO.output(self.led_pin, GPIO.HIGH)
+        self.set_led(LedState.ON)
 
     def led_off(self):
-        GPIO.output(self.led_pin, GPIO.LOW)
+        self.set_led(LedState.OFF)
+
+    def set_led(self, state):
+        self.led_state = state
+        if self.led_state == LedState.OFF:
+            GPIO.output(self.led_pin, GPIO.LOW)
+        else:
+            GPIO.output(self.led_pin, GPIO.HIGH)
 
 class ButtonRail(object):
 
@@ -84,8 +91,28 @@ class ButtonRail(object):
             if button.was_pressed():
                 result = True
                 #do not break in order to reset all buttons
+                #reset is done inside was_pressed()
 
         return result
+
+    def set_all_led(self, led_state):
+        
+        for button in ButtonRail.push_buttons:
+            button.set_led(led_state)
+
+    def show_led_coutdown(self, counter):
+        
+        if counter == 4:
+            ButtonRail.push_buttons[0].led_off()
+        if counter == 3:
+            ButtonRail.push_buttons[1].led_off()
+        if counter == 2:
+            ButtonRail.push_buttons[2].led_off()
+        if counter == 1:
+            ButtonRail.push_buttons[3].led_off()
+        if counter == 0:
+            self.set_all_led(LedState.ON)
+
 
     def test_routine(self):
         """
