@@ -1,7 +1,10 @@
-import piggyphoto, pygame
+import piggyphoto
+import pygame
 import time
 
 DEFAULT_RESOLUTION = [640,424]
+
+START_FULLSCREEN = True
 
 DEFAULT_FONT_SIZE = 72
 
@@ -72,6 +75,7 @@ class Camera(object):
     """
 
     def __init__(self):
+        self.cam = None
         self.cam = piggyphoto.camera()
         # cam.leave_locked()
 
@@ -97,24 +101,42 @@ class Camera(object):
         app.last_photo = pygame.transform.scale(app.last_photo, app.screen.get_size())
 
     def __del__(self):
-        if self.cam:
+        if self.cam:    
             self.cam.exit()
 
 
 class PhotoBooth(object):
-    def __init__(self):
+    def __init__(self, fullscreen=False):
         self.cam = None
         self.screen = None
         self._state = None
 
-        self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)  # , pygame.FULLSCREEN)
+        self.fullscreen=fullscreen
+        # Detect the screen resolution
+        info_object = pygame.display.Info()
+        self.screen_resolution = [info_object.current_w, info_object.current_h]
+
+        if self.fullscreen:
+            self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)
+
+        self.app_resolution = self.screen.get_size()
 
         self.screen.fill((128, 128, 128))
+            
+        self.last_photo = None
 
     def init_camera(self):
         self.cam = Camera()
         picture = self.cam.get_preview()
-        self.screen = pygame.display.set_mode(picture.get_size())#, pygame.FULLSCREEN) # Uncomment to enable full screen
+        
+        if self.fullscreen:
+            self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode(picture.get_size())
+
+        self.app_resolution = self.screen.get_size()
 
     @property
     def state(self):
@@ -144,8 +166,12 @@ def mouse_pressed():
             return True
     return False
 
-def show_cam_picture(screen, picture):
-    screen.blit(picture, (0, 0))
+def show_cam_picture(screen, picture, fullscreen = True):
+    if fullscreen:
+        img = pygame.transform.scale(picture, screen.get_size())
+    else:
+        img = picture
+    screen.blit(img, (0, 0))
 
 def get_text_img(text, size, color):
     font = pygame.font.Font(None, size)
@@ -169,7 +195,7 @@ class StateWaitingForCamera(PhotoBoothState):
             self.photobooth.init_camera()
             self.photobooth.state = self.next_state
         except Exception, e:
-            show_text(self.photobooth.screen, "Camera not connected: "+str(e), get_text_mid_position(DEFAULT_RESOLUTION))
+            show_text(self.photobooth.screen, "Camera not connected: "+str(e), get_text_mid_position(self.photobooth.app_resolution))
             time.sleep(30)
 
 
@@ -181,7 +207,8 @@ class StateShowSlideShow(PhotoBoothState):
         if mouse_pressed():
             self.photobooth.state = self.next_state
         #TODO EXTEND TO REAL SLIDESHOW
-        show_cam_picture(self.photobooth.screen, app.last_photo)
+        if app.last_photo:
+            show_cam_picture(self.photobooth.screen, app.last_photo)
 
         show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), 36)
 
@@ -218,7 +245,7 @@ class StatePhotoTrigger(PhotoBoothState):
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
         # Show countdown
-        show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(DEFAULT_RESOLUTION), 140)
+        show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), 140)
 
     def _take_photo(self):
         #first update to latest preview
@@ -250,7 +277,7 @@ if __name__ == '__main__':
     pygame.event.set_allowed(pygame.KEYDOWN)
     pygame.event.set_allowed(pygame.QUIT)
 
-    app = PhotoBooth()
+    app = PhotoBooth(fullscreen=START_FULLSCREEN)
 
     # Create all states
     state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
@@ -270,7 +297,7 @@ if __name__ == '__main__':
 
 
     while not quit_pressed():
-        pygame.display.update()
+        
         try:
 
             app.state.update()
@@ -280,5 +307,5 @@ if __name__ == '__main__':
 
         except Exception, e:
             print(e)
-            show_text(app.screen, "Error", get_text_mid_position(DEFAULT_RESOLUTION))
-
+            show_text(app.screen, "Error", get_text_mid_position(self.photobooth.app_resolution))
+        pygame.display.update()
