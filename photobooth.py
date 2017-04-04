@@ -2,6 +2,8 @@ import piggyphoto
 import pygame
 import time
 
+from io import ButtonRail, PushButton
+
 DEFAULT_RESOLUTION = [640,424]
 
 START_FULLSCREEN = True
@@ -106,7 +108,9 @@ class Camera(object):
 
 
 class PhotoBooth(object):
-    def __init__(self, fullscreen=False):
+    def __init__(self, fullscreen=False, io_manager=None):
+
+        self.io_manager = io_manager
         self.cam = None
         self.screen = None
         self._state = None
@@ -204,7 +208,7 @@ class StateShowSlideShow(PhotoBoothState):
         super(self.__class__, self).__init__(photobooth=photobooth, next_state=next_state)
 
     def update_callback(self):
-        if mouse_pressed():
+        if mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
             self.photobooth.state = self.next_state
         #TODO EXTEND TO REAL SLIDESHOW
         if app.last_photo:
@@ -224,7 +228,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         self.timeout_state=timeout_state
 
     def update_callback(self):
-        if mouse_pressed():
+        if mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
             self.photobooth.state = self.next_state
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
@@ -234,6 +238,13 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             self.photobooth.state = self.timeout_state
         else:
             self.reset()
+
+    def reset(self):
+        super(self.__class__, self).reset()
+        self.photobooth.io_manager.push_buttons[0].led_on()
+        self.photobooth.io_manager.push_buttons[1].led_on()
+        self.photobooth.io_manager.push_buttons[2].led_on()
+        self.photobooth.io_manager.push_buttons[3].led_on()
 
 
 class StatePhotoTrigger(PhotoBoothState):
@@ -246,14 +257,33 @@ class StatePhotoTrigger(PhotoBoothState):
         show_cam_picture(self.photobooth.screen, preview_img)
         # Show countdown
         show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), 140)
+        if self.counter == 4:
+            self.photobooth.io_manager.push_buttons[0].led_off()
+        if self.counter == 3:
+            self.photobooth.io_manager.push_buttons[1].led_off()
+        if self.counter == 2:
+            self.photobooth.io_manager.push_buttons[2].led_off()
+        if self.counter == 1:
+            self.photobooth.io_manager.push_buttons[3].led_off()
 
     def _take_photo(self):
         #first update to latest preview
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
         pygame.display.update()
+        self.photobooth.io_manager.push_buttons[0].led_on()
+        self.photobooth.io_manager.push_buttons[1].led_on()
+        self.photobooth.io_manager.push_buttons[2].led_on()
+        self.photobooth.io_manager.push_buttons[3].led_on()
+
         #take photo
         self.photobooth.cam.take_photo(self.photobooth)
+
+        self.photobooth.io_manager.push_buttons[0].led_off()
+        self.photobooth.io_manager.push_buttons[1].led_off()
+        self.photobooth.io_manager.push_buttons[2].led_off()
+        self.photobooth.io_manager.push_buttons[3].led_off()
+
         self.photobooth.state = self.next_state
 
 
@@ -277,7 +307,7 @@ if __name__ == '__main__':
     pygame.event.set_allowed(pygame.KEYDOWN)
     pygame.event.set_allowed(pygame.QUIT)
 
-    app = PhotoBooth(fullscreen=START_FULLSCREEN)
+    app = PhotoBooth(fullscreen=START_FULLSCREEN, io_manager=ButtonRail())
 
     # Create all states
     state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
