@@ -39,6 +39,7 @@ class PushButton(object):
     def _press_callback(self, channel):
 
         self.button_event_state = ButtonState.BUTTON_PRESSED
+        print('_press_callback',self.color)
 
     def _release_callback(self, channel):
 
