@@ -2,6 +2,7 @@
 
 import RPi.GPIO as GPIO
 
+GPIO.setmode(GPIO.BCM)
 
 class ButtonState(object):
     BUTTON_PRESSED = GPIO.LOW
@@ -27,18 +28,19 @@ class PushButton(object):
 
         GPIO.output(self.led_pin, GPIO.LOW)
 
-        GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback, bouncetime=300)
-        GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
+        #TODO add event for both
+        GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback)
+        #GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
 
     def __del__(self):
         GPIO.cleanup(self.button_pin)
         GPIO.cleanup(self.led_pin)
 
-    def _press_callback(self):
+    def _press_callback(self, channel):
 
         self.button_event_state = ButtonState.BUTTON_PRESSED
 
-    def _release_callback(self):
+    def _release_callback(self, channel):
 
         self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
 
@@ -94,8 +96,14 @@ class ButtonRail(object):
             for button in ButtonRail.push_buttons:
                 if button.is_pressed():
                     print("pressed: ",button.color)
+                    button.led_on()
+                else:
+                    button.led_off()
 
         def __del__(self):
             GPIO.cleanup()
 
-GPIO.setmode(GPIO.BCM)
+if __name__ == '__main__':
+    button_rail = ButtonRail()
+    button_rail.test_routine()
+    
