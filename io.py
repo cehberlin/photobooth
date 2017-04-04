@@ -2,56 +2,100 @@
 
 import RPi.GPIO as GPIO
 
-#configuration
 
-BUTTON_1 = 23
-BUTTON_2 = 25
-BUTTON_3 = 16
-BUTTON_4 = 21
+class ButtonState(object):
+    BUTTON_PRESSED = GPIO.LOW
+    BUTTON_NOT_PRESSED = GPIO.HIGH
 
-LED_1 = 18
-LED_2 = 24
-LED_3 = 12
-LED_4 = 20
+class LedState(object):
+    OFF = GPIO.LOW
+    ON = GPIO.HIGH
 
+class PushButton(object):
 
-#setup
+    def __init__(self, color, button_pin, led_pin):
+        self.color = color
+        self.button_pin = button_pin
+        self.led_pin = led_pin
 
-leds = [LED_1,LED_2,LED_3,LED_4]
-buttons = [BUTTON_1,BUTTON_2,BUTTON_3,BUTTON_4]
+        self.led_state = LedState.OFF
+        self.reset_button_state()
+
+        GPIO.setup(self.button_pin, GPIO.IN)
+
+        GPIO.setup(self.led_pin, GPIO.OUT)
+
+        GPIO.output(self.led_pin, GPIO.LOW)
+
+        GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback, bouncetime=300)
+        GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
+
+    def __del__(self):
+        GPIO.cleanup(self.button_pin)
+        GPIO.cleanup(self.led_pin)
+
+    def _press_callback(self):
+
+        self.button_event_state = ButtonState.BUTTON_PRESSED
+
+    def _release_callback(self):
+
+        self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
+
+    def is_pressed(self):
+        return GPIO.input(self.button_pin) == GPIO.LOW
+
+    def was_pressed(self):
+        result = self.button_event_state == ButtonState.BUTTON_PRESSED
+        self.reset_button_state()
+        return
+
+    def reset_button_state(self):
+        self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
+
+    def led_on(self):
+        GPIO.output(self.led_pin, GPIO.HIGH)
+
+    def led_off(self):
+        GPIO.output(self.led_pin, GPIO.LOW)
+
+class ButtonRail(object):
+
+    # Adjust configuration if necessary
+    push_buttons = [PushButton(color='green',   button_pin=23, led_pin=18),
+                    PushButton(color='blue',    button_pin=25, led_pin=24),
+                    PushButton(color='yellow',  button_pin=16, led_pin=12),
+                    PushButton(color='red',     button_pin=21, led_pin=20)]
+
+    def __init__(self):
+        pass
+
+    def any_button_pressed(self):
+        """
+        Check if any button was pressed
+        :return: true if a button was pressed since last call
+        """
+
+        result = False
+        for button in ButtonRail.push_buttons:
+            if button.was_pressed():
+                result = True
+                #do not break in order to reset all buttons
+
+        return result
+
+    def test_routine(self):
+        """
+        This is a very simple test routine that lights the button that is pressed
+        """
+
+        while True: #TODO replace endless loop
+
+            for button in ButtonRail.push_buttons:
+                if button.is_pressed():
+                    print("pressed: ",button.color)
+
+        def __del__(self):
+            GPIO.cleanup()
 
 GPIO.setmode(GPIO.BCM)
-
-GPIO.setup(buttons, GPIO.IN)
-
-GPIO.setup(leds, GPIO.OUT)
-
-GPIO.output(leds, GPIO.LOW)
-
-#test routine
-
-while True:
-    if GPIO.input(BUTTON_1) == GPIO.LOW:
-        print('Button1')
-        GPIO.output(LED_1, GPIO.HIGH)
-    else:
-        GPIO.output(LED_1, GPIO.LOW)
-    if GPIO.input(BUTTON_2) == GPIO.LOW:
-        print('Button2')
-        GPIO.output(LED_2, GPIO.HIGH)
-    else:
-        GPIO.output(LED_2, GPIO.LOW)
-    if GPIO.input(BUTTON_3) == GPIO.LOW:
-        print('Button3')
-        GPIO.output(LED_3, GPIO.HIGH)
-    else:
-        GPIO.output(LED_3, GPIO.LOW)
-    if GPIO.input(BUTTON_4) == GPIO.LOW:
-        print('Button4')
-        GPIO.output(LED_4, GPIO.HIGH)
-    else:
-        GPIO.output(LED_4, GPIO.LOW)
-        
-
-GPIO.cleanup()
-
