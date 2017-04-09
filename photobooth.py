@@ -16,7 +16,7 @@ PHOTO_COUNTDOWN = 5
 PHOTO_SHOW_TIME = 5
 
 #options 'pygame' 'raspi'
-IO_MANAGER_CLASS = 'pygame'
+IO_MANAGER_CLASS = 'raspi'
 
 class PhotoBoothState(object):
 

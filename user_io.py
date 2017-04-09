@@ -124,10 +124,8 @@ if found_rpi_module:
 
             GPIO.output(self.led_pin, GPIO.LOW)
 
-            # TODO add event for both
-            GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback)
-            # GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
-
+            GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback, bouncetime=300)
+            
         def __del__(self):
             GPIO.cleanup(self.button_pin)
             GPIO.cleanup(self.led_pin)
@@ -137,17 +135,13 @@ if found_rpi_module:
             self.button_event_state = ButtonState.BUTTON_PRESSED
             print('_press_callback', self.color)
 
-        def _release_callback(self, channel):
-
-            self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
-
         def is_pressed(self):
             return GPIO.input(self.button_pin) == GPIO.LOW
 
         def was_pressed(self):
             result = self.button_event_state == ButtonState.BUTTON_PRESSED
             self.reset_button_state()
-            return
+            return result
 
         def reset_button_state(self):
             self.button_event_state = ButtonState.BUTTON_NOT_PRESSED
@@ -162,7 +156,7 @@ if found_rpi_module:
             self.led_state = state
             if self.led_state == LedState.OFF:
                 GPIO.output(self.led_pin, GPIO.LOW)
-            else:
+            elif self.led_state == LedState.ON:
                 GPIO.output(self.led_pin, GPIO.HIGH)
 
 
