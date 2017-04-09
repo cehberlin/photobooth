@@ -7,7 +7,7 @@ from user_io import UserIoFactory, LedState
 
 DEFAULT_RESOLUTION = [640,424]
 
-START_FULLSCREEN = False
+START_FULLSCREEN = True
 
 COUNTER_FONT_SIZE = 140
 
@@ -120,6 +120,7 @@ class PhotoBooth(object):
 
         if self.fullscreen:
             self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
+            pygame.mouse.set_visible(False)
         else:
             self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)
 
@@ -139,6 +140,7 @@ class PhotoBooth(object):
         
         if self.fullscreen:
             self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
+            pygame.mouse.set_visible(False)
         else:
             self.screen = pygame.display.set_mode(picture.get_size())
 

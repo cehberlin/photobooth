@@ -6,16 +6,13 @@ from pygame_utils import *
 
 import imp
 
-
 class ButtonState(object):
     BUTTON_PRESSED = 0
     BUTTON_NOT_PRESSED = 1
 
-
 class LedState(object):
     OFF = 0
     ON = 1
-
 
 class AbstractUserIo(object):
     """
