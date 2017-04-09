@@ -6,13 +6,16 @@ from pygame_utils import *
 
 import imp
 
+
 class ButtonState(object):
     BUTTON_PRESSED = 0
     BUTTON_NOT_PRESSED = 1
 
+
 class LedState(object):
     OFF = 0
     ON = 1
+
 
 class AbstractUserIo(object):
     """
@@ -38,6 +41,7 @@ class UserIoFactory(object):
     Factory for the registration and creation of AbstractUserIo
     """
     algorithms = {}
+
     @classmethod
     def register_algorithm(cls, id_class, class_obj):
         """
@@ -50,11 +54,12 @@ class UserIoFactory(object):
         :return:
         """
         if not issubclass(class_obj, AbstractUserIo):
-            assert("Algo is not subclass of AbstractActivationAlgorithm")
+            assert ("Algo is not subclass of AbstractActivationAlgorithm")
         if cls.algorithms.has_key(id_class):
-            assert("Algorithm ID already in use")
+            assert ("Algorithm ID already in use")
         else:
             cls.algorithms[id_class] = class_obj
+
     @classmethod
     def create_algorithm(cls, id_class, **kwargs):
         """
@@ -70,9 +75,8 @@ class UserIoFactory(object):
 
 
 class PyGameUserIo(AbstractUserIo):
-
     def __init__(self, photobooth, **kwargs):
-        self._photobooth=photobooth
+        self._photobooth = photobooth
         pass
 
     def any_button_pressed(self):
@@ -90,7 +94,6 @@ class PyGameUserIo(AbstractUserIo):
 
 UserIoFactory.register_algorithm(id_class='pygame', class_obj=PyGameUserIo)
 
-
 try:
     imp.find_module('RPi')
     found_rpi_module = True
@@ -103,6 +106,7 @@ if found_rpi_module:
     import RPi.GPIO as GPIO
 
     GPIO.setmode(GPIO.BCM)
+
 
     class RaspiPushButton(object):
 
@@ -120,9 +124,9 @@ if found_rpi_module:
 
             GPIO.output(self.led_pin, GPIO.LOW)
 
-            #TODO add event for both
+            # TODO add event for both
             GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback)
-            #GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
+            # GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
 
         def __del__(self):
             GPIO.cleanup(self.button_pin)
@@ -131,7 +135,7 @@ if found_rpi_module:
         def _press_callback(self, channel):
 
             self.button_event_state = ButtonState.BUTTON_PRESSED
-            print('_press_callback',self.color)
+            print('_press_callback', self.color)
 
         def _release_callback(self, channel):
 
@@ -161,6 +165,7 @@ if found_rpi_module:
             else:
                 GPIO.output(self.led_pin, GPIO.HIGH)
 
+
     class ButtonRail(AbstractUserIo):
 
         # Adjust configuration if necessary
@@ -182,8 +187,8 @@ if found_rpi_module:
             for button in ButtonRail.push_buttons:
                 if button.was_pressed():
                     result = True
-                    #do not break in order to reset all buttons
-                    #reset is done inside was_pressed()
+                    # do not break in order to reset all buttons
+                    # reset is done inside was_pressed()
 
             return result
 
@@ -205,23 +210,22 @@ if found_rpi_module:
             if counter == 0:
                 self.set_all_led(LedState.ON)
 
-
         def test_routine(self):
             """
             This is a very simple test routine that lights the button that is pressed
             """
 
-            while True: #TODO replace endless loop
+            while True:  # TODO replace endless loop
 
                 for button in ButtonRail.push_buttons:
                     if button.is_pressed():
-                        print("pressed: ",button.color)
+                        print("pressed: ", button.color)
                         button.led_on()
                     else:
                         button.led_off()
 
-            def __del__(self):
-                GPIO.cleanup()
+        def __del__(self):
+            GPIO.cleanup()
 
 
     UserIoFactory.register_algorithm(id_class='raspi', class_obj=ButtonRail)
@@ -229,4 +233,3 @@ if found_rpi_module:
     if __name__ == '__main__':
         button_rail = ButtonRail()
         button_rail.test_routine()
-
