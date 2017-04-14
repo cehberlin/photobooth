@@ -1,15 +1,16 @@
-import piggyphoto
+
 import time
 
 from pygame_utils import *
-
 from user_io import UserIoFactory, LedState
+from camera import Camera
 
+#Configuration
 DEFAULT_RESOLUTION = [640,424]
-
 START_FULLSCREEN = True
 
 COUNTER_FONT_SIZE = 140
+INFO_FONT_SIZE = 36
 
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
@@ -69,41 +70,6 @@ class PhotoBoothState(object):
 
     def is_counter_enabled(self):
         return self.counter > -1
-
-class Camera(object):
-    """
-    Class wrapping camera access
-    """
-
-    def __init__(self):
-        self.cam = None
-        self.cam = piggyphoto.camera()
-        # cam.leave_locked()
-
-    def set_memory_capture(self):
-        # set capturetarget to memory card
-        cam_config = self.cam.config
-        cam_config['main']['settings']['capturetarget'].value = 'Memory card'
-        self.cam.config = cam_config
-
-    def set_idle(self):
-        cam_config = self.cam.config
-        cam_config['main']['actions']['viewfinder'].value = 0
-        self.cam.config = cam_config
-
-    def get_preview(self):
-        self.cam.capture_preview('preview.jpg')
-        picture = pygame.image.load("preview.jpg")
-        return picture
-
-    def take_photo(self,app):
-        self.cam.capture_image('snap.jpg')
-        app.last_photo = pygame.image.load('snap.jpg')
-        app.last_photo = pygame.transform.scale(app.last_photo, app.screen.get_size())
-
-    def __del__(self):
-        if self.cam:    
-            self.cam.exit()
 
 
 class PhotoBooth(object):
@@ -186,7 +152,7 @@ class StateShowSlideShow(PhotoBoothState):
         if app.last_photo:
             show_cam_picture(self.photobooth.screen, app.last_photo)
 
-        show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), 36)
+        show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), INFO_FONT_SIZE)
 
     def reset(self):
         super(StateShowSlideShow, self).reset()
@@ -224,7 +190,7 @@ class StatePhotoTrigger(PhotoBoothState):
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
         # Show countdown
-        show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), 140)
+        show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
         self.photobooth.io_manager.show_led_coutdown(self.counter)
         
     def _take_photo(self):
@@ -248,7 +214,7 @@ class StateShowPhoto(PhotoBoothState):
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo)
-        show_text(self.photobooth.screen, "Last Photo:", (70, 30), 36)
+        show_text(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
 
     def _switch_to_next_state(self):
         self.photobooth.state = self.next_state

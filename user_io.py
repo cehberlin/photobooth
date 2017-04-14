@@ -88,9 +88,10 @@ class PyGameUserIo(AbstractUserIo):
         print('led countdown:', counter)
         pass
 
-
+#Register the PyGameUserIo implementation
 UserIoFactory.register_algorithm(id_class='pygame', class_obj=PyGameUserIo)
 
+#following implementation is only activated if RPi (probably on a raspberry pi is available
 try:
     imp.find_module('RPi')
     found_rpi_module = True
