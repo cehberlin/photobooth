@@ -245,7 +245,7 @@ if __name__ == '__main__':
     app.state = state_waiting_for_camera
 
 
-    # Main programm loop
+    # Main program loop
     while not app.event_manager.quit_pressed():
         
         try:
