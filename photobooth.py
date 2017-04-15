@@ -2,12 +2,12 @@
 import time
 
 from pygame_utils import *
-from user_io import UserIoFactory, LedState
-from camera import Camera
+from user_io import get_user_io_factory, LedState
+from camera import get_camera_factory
 
 #Configuration
 DEFAULT_RESOLUTION = [640,424]
-START_FULLSCREEN = True
+START_FULLSCREEN = False
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
@@ -16,8 +16,13 @@ PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
 PHOTO_SHOW_TIME = 5
 
-#options 'pygame' 'raspi'
-IO_MANAGER_CLASS = 'raspi'
+PHOTO_FOLDER = 'photos'
+
+#options 'pygame', 'raspi'
+IO_MANAGER_CLASS = 'pygame'
+
+#options 'dummy', 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 class PhotoBoothState(object):
 
@@ -78,6 +83,7 @@ class PhotoBooth(object):
         self.cam = None
         self.screen = None
         self._state = None
+        self._last_photo_resized = None
 
         self.fullscreen=fullscreen
         # Detect the screen resolution
@@ -94,14 +100,12 @@ class PhotoBooth(object):
 
         self.screen.fill((128, 128, 128))
             
-        self.last_photo = None
-
         self.event_manager = PyGameEventManager()
 
-        self.io_manager = UserIoFactory.create_algorithm(id_class=IO_MANAGER_CLASS, photobooth=self)
+        self.io_manager = get_user_io_factory().create_algorithm(id_class=IO_MANAGER_CLASS, photobooth=self)
 
     def init_camera(self):
-        self.cam = Camera()
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS)
         picture = self.cam.get_preview()
         
         if self.fullscreen:
@@ -115,6 +119,15 @@ class PhotoBooth(object):
     def update(self):
         self.event_manager.update_events()
         self.state.update()
+
+    @property
+    def last_photo(self):
+        return self._last_photo_resized
+
+    @last_photo.setter
+    def last_photo(self, value):
+        #resize photo to screen
+        self._last_photo_resized = pygame.transform.scale(value, self.screen.get_size())
 
     @property
     def state(self):
@@ -138,7 +151,7 @@ class StateWaitingForCamera(PhotoBoothState):
             self.photobooth.state = self.next_state
         except Exception as e:
             show_text(self.photobooth.screen, "Camera not connected: "+str(e), get_text_mid_position(self.photobooth.app_resolution))
-            time.sleep(30)
+            time.sleep(1)
 
 
 class StateShowSlideShow(PhotoBoothState):
@@ -201,7 +214,7 @@ class StatePhotoTrigger(PhotoBoothState):
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         #take photo
-        self.photobooth.cam.take_photo(self.photobooth)
+        self.photobooth.last_photo = self.photobooth.cam.take_photo()
 
         self.photobooth.io_manager.set_all_led(LedState.ON)
 

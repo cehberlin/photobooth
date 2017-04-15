@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from abc import ABCMeta, abstractmethod
+from utils import GenericClassFactory
 
 from pygame_utils import *
 
@@ -32,44 +33,15 @@ class AbstractUserIo(object):
     def show_led_coutdown(self, counter):
         raise NotImplementedError
 
+# Create singleton factory object
+user_io_factory = GenericClassFactory(AbstractUserIo)
 
-class UserIoFactory(object):
+def get_user_io_factory():
     """
-    Factory for the registration and creation of AbstractUserIo
+    Provide external access to the factory instance
+    :return: factory instance
     """
-    algorithms = {}
-
-    @classmethod
-    def register_algorithm(cls, id_class, class_obj):
-        """
-        Register an algorithm in the factory under the given ID
-        Algorithm has to be a subclass of AbstractUserIo
-        :param id_class: ID for the algorithm
-        :type id_class: str
-        :param class_obj: the algorithm class
-        :type class_obj: AbstractUserIo
-        :return:
-        """
-        if not issubclass(class_obj, AbstractUserIo):
-            assert ("Algo is not subclass of AbstractActivationAlgorithm")
-        if cls.algorithms.has_key(id_class):
-            assert ("Algorithm ID already in use")
-        else:
-            cls.algorithms[id_class] = class_obj
-
-    @classmethod
-    def create_algorithm(cls, id_class, **kwargs):
-        """
-        Initialize the algorithm with the given ID
-        :param id_class: the id of the impl that should be created
-        :type id_class str
-        :return: a specific instance of AbstractUserIo
-        """
-        if not cls.algorithms.has_key(id_class):
-            raise LookupError("Cannot find class_id: " + id_class)
-        else:
-            return cls.algorithms[id_class](**kwargs)
-
+    return user_io_factory;
 
 class PyGameUserIo(AbstractUserIo):
     def __init__(self, photobooth, **kwargs):
@@ -89,7 +61,7 @@ class PyGameUserIo(AbstractUserIo):
         pass
 
 #Register the PyGameUserIo implementation
-UserIoFactory.register_algorithm(id_class='pygame', class_obj=PyGameUserIo)
+user_io_factory.register_algorithm(id_class='pygame', class_obj=PyGameUserIo)
 
 #following implementation is only activated if RPi (probably on a raspberry pi is available
 try:
@@ -131,7 +103,7 @@ if found_rpi_module:
         def _press_callback(self, channel):
 
             self.button_event_state = ButtonState.BUTTON_PRESSED
-            print('_press_callback', self.color)
+            #print('_press_callback', self.color)
 
         def is_pressed(self):
             return GPIO.input(self.button_pin) == GPIO.LOW
@@ -219,8 +191,7 @@ if found_rpi_module:
         def __del__(self):
             GPIO.cleanup()
 
-
-    UserIoFactory.register_algorithm(id_class='raspi', class_obj=ButtonRail)
+    user_io_factory.register_algorithm(id_class='raspi', class_obj=ButtonRail)
 
     if __name__ == '__main__':
         button_rail = ButtonRail()
