@@ -1,6 +1,10 @@
 
 import time
 
+import glob
+import random
+import os
+
 from pygame_utils import *
 from user_io import get_user_io_factory, LedState
 from camera import get_camera_factory
@@ -15,8 +19,9 @@ INFO_FONT_SIZE = 36
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
 PHOTO_SHOW_TIME = 5
+SLIDE_SHOW_TIMEOUT = 5
 
-PHOTO_FOLDER = 'photos'
+PHOTO_DIRECTORY = 'images'
 
 #options 'pygame', 'raspi'
 IO_MANAGER_CLASS = 'pygame'
@@ -84,6 +89,7 @@ class PhotoBooth(object):
         self.screen = None
         self._state = None
         self._last_photo_resized = None
+        self._taken_photos = []
 
         self.fullscreen=fullscreen
         # Detect the screen resolution
@@ -104,8 +110,12 @@ class PhotoBooth(object):
 
         self.io_manager = get_user_io_factory().create_algorithm(id_class=IO_MANAGER_CLASS, photobooth=self)
 
+        #create photo directory if necessary
+        if not os.path.exists(PHOTO_DIRECTORY):
+            os.makedirs(PHOTO_DIRECTORY)
+
     def init_camera(self):
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS)
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY)
         picture = self.cam.get_preview()
         
         if self.fullscreen:
@@ -155,22 +165,40 @@ class StateWaitingForCamera(PhotoBoothState):
 
 
 class StateShowSlideShow(PhotoBoothState):
-    def __init__(self, photobooth, next_state):
-        super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state)
+    def __init__(self, photobooth, next_state, counter):
+        super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
+        self._photo_set = []
+        self.current_photo = None
 
     def update_callback(self):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
             self.photobooth.state = self.next_state
-        #TODO EXTEND TO REAL SLIDESHOW
-        if app.last_photo:
-            show_cam_picture(self.photobooth.screen, app.last_photo)
+
+        if self.current_photo:
+            show_cam_picture(self.photobooth.screen, self.current_photo)
 
         show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), INFO_FONT_SIZE)
+
+    def _next_photo(self):
+        if len(self._photo_set) > 0:
+            photo_file = random.choice(self._photo_set)
+            self.current_photo =  pygame.image.load(photo_file)
+            print("Next photo: " + photo_file)
+            super(StateShowSlideShow, self).reset()  # reset counter
+        else:
+            self._reload_photo_set() # check for new photos
+
+    def _reload_photo_set(self):
+        # load all images from directory
+        self._photo_set = glob.glob(PHOTO_DIRECTORY + "/*.jpg")
 
     def reset(self):
         super(StateShowSlideShow, self).reset()
         if self.photobooth.cam:
             self.photobooth.cam.set_idle()
+        self._reload_photo_set()
+        self._next_photo()
+        print("Loading Slideshow images")
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
@@ -245,7 +273,7 @@ if __name__ == '__main__':
 
     state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
 
-    timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None)
+    timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
 
     state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo, timeout_state=timeout_slide_show, counter=PHOTO_TIMEOUT)
 

@@ -1,6 +1,9 @@
 import piggyphoto
 import pygame
+
 from utils import GenericClassFactory
+from shutil import copyfile
+from datetime import datetime
 
 from abc import ABCMeta, abstractmethod
 
@@ -58,13 +61,14 @@ class PiggyphotoCamera(AbstractCamera):
     Class wrapping camera access through piggyphoto gphoto2 library
     """
 
-    def __init__(self,  **kwargs):
+    def __init__(self,  photo_directory, **kwargs):
         """
         :param photobooth: app instance
         :param kwargs:
         """
         self.cam = None
         self.cam = piggyphoto.camera()
+        self._photo_directory = photo_directory
         #self.cam.leave_locked() # not sure what would be the effect
 
     def set_memory_capture(self):
@@ -84,8 +88,9 @@ class PiggyphotoCamera(AbstractCamera):
         return picture
 
     def take_photo(self):
-        self.cam.capture_image('snap.jpg')
-        return pygame.image.load('snap.jpg')
+        photo_name = self._photo_directory + "/dsc_" + str(datetime.now()) + ".jpg"
+        self.cam.capture_image(photo_name)
+        return pygame.image.load(photo_name)
 
     def __del__(self):
         if self.cam:
@@ -99,8 +104,9 @@ class DummyCamera(AbstractCamera):
     Dummy camera class that just provides some example images for testing
     """
 
-    def __init__(self,  **kwargs):
+    def __init__(self, photo_directory, **kwargs):
         # Load some dummy images
+        self._photo_directory = photo_directory
         self._previews = [pygame.image.load("dummy_preview00.jpg"), pygame.image.load("dummy_preview01.jpg")]
         self._preview_cnt = 0
         self._photo = pygame.image.load("dummy_snap.jpg")
@@ -116,6 +122,7 @@ class DummyCamera(AbstractCamera):
         return self._previews[self._preview_cnt]
 
     def take_photo(self):
+        copyfile("dummy_snap.jpg", self._photo_directory + "/dummy_snap_" +str(datetime.now())+ ".jpg")
         return self._photo
 
     def __del__(self):
