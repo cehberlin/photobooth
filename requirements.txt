@@ -1,3 +1,4 @@
 piggyphoto
 pygame
 RPi
+pysmb

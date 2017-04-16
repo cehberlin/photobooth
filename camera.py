@@ -2,7 +2,7 @@ import piggyphoto
 import pygame
 
 from utils import GenericClassFactory
-from shutil import copyfile
+from shutil import copy
 from datetime import datetime
 
 from abc import ABCMeta, abstractmethod
@@ -40,7 +40,7 @@ class AbstractCamera(object):
     def take_photo(self):
         """
         Trigger a photo on the camera
-        :return: photo pygame.image
+        :return: (photo pygame.image,PATH_TO_PHOTO)
         """
         raise NotImplementedError
 
@@ -88,9 +88,9 @@ class PiggyphotoCamera(AbstractCamera):
         return picture
 
     def take_photo(self):
-        photo_name = self._photo_directory + "/dsc_" + str(datetime.now()) + ".jpg"
+        photo_name = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
         self.cam.capture_image(photo_name)
-        return pygame.image.load(photo_name)
+        return pygame.image.load(photo_name), photo_name
 
     def __del__(self):
         if self.cam:
@@ -122,8 +122,9 @@ class DummyCamera(AbstractCamera):
         return self._previews[self._preview_cnt]
 
     def take_photo(self):
-        copyfile("dummy_snap.jpg", self._photo_directory + "/dummy_snap_" +str(datetime.now())+ ".jpg")
-        return self._photo
+        photo_file = self._photo_directory + "/dummy_snap_" +str(datetime.now()).replace(':','-')+ ".jpg"
+        copy("dummy_snap.jpg", photo_file)
+        return self._photo, photo_file
 
     def __del__(self):
         pass

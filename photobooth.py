@@ -4,6 +4,7 @@ import time
 import glob
 import random
 import os
+from smb.SMBConnection import SMBConnection
 
 from pygame_utils import *
 from user_io import get_user_io_factory, LedState
@@ -20,6 +21,7 @@ PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
 PHOTO_SHOW_TIME = 5
 SLIDE_SHOW_TIMEOUT = 5
+PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
 PHOTO_DIRECTORY = 'images'
 
@@ -27,7 +29,7 @@ PHOTO_DIRECTORY = 'images'
 IO_MANAGER_CLASS = 'pygame'
 
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
+CAMERA_CLASS = 'piggyphoto'
 
 class PhotoBoothState(object):
 
@@ -137,7 +139,7 @@ class PhotoBooth(object):
     @last_photo.setter
     def last_photo(self, value):
         #resize photo to screen
-        self._last_photo_resized = pygame.transform.scale(value, self.screen.get_size())
+        self._last_photo_resized = (pygame.transform.scale(value[0], self.screen.get_size()), value[1])
 
     @property
     def state(self):
@@ -182,8 +184,8 @@ class StateShowSlideShow(PhotoBoothState):
     def _next_photo(self):
         if len(self._photo_set) > 0:
             photo_file = random.choice(self._photo_set)
-            self.current_photo =  pygame.image.load(photo_file)
             print("Next photo: " + photo_file)
+            self.current_photo =  pygame.image.load(photo_file)
             super(StateShowSlideShow, self).reset()  # reset counter
         else:
             self._reload_photo_set() # check for new photos
@@ -254,10 +256,47 @@ class StateShowPhoto(PhotoBoothState):
         super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
 
     def update_callback(self):
-        show_cam_picture(self.photobooth.screen, app.last_photo)
+        show_cam_picture(self.photobooth.screen, app.last_photo[0])
         show_text(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
 
     def _switch_to_next_state(self):
+        self.photobooth.state = self.next_state
+
+class StatePrinting(PhotoBoothState):
+    def __init__(self, photobooth, next_state, counter=-1):
+        super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
+
+    def print_photo(self, photo_file):
+        """
+        In our case we copy the file to a remote windows server that monitors that share and prints the files
+        """
+        smb_user = 'pi'
+        smb_pw = 'TODO'
+        server_name = 'TODO'
+        smb_share = 'test'
+        server_ip = '192.168.0.32'
+        conn = SMBConnection(smb_user, smb_pw,
+                     'raspberry', server_name,
+                     use_ntlm_v2 = True)
+        if conn.connect(server_ip, 139):
+            with open(photo_file, 'wb') as fp:
+                conn.storeFile(smb_share, os.path.basename(fp.name), fp)
+            conn.close()
+        else:
+            print('Cannot connect to server')
+            
+
+    def update_callback(self):
+        show_cam_picture(self.photobooth.screen, app.last_photo[0])
+        show_text(self.photobooth.screen, "Print photo?", (70, 30), 36)
+        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
+            self.print_photo(app.last_photo[1])
+            self.photobooth.state = self.next_state
+
+    def _switch_to_next_state(self):
+        """
+        This is just a timeout behaviour
+        """
         self.photobooth.state = self.next_state
 
 
@@ -269,7 +308,8 @@ if __name__ == '__main__':
     app = PhotoBooth(fullscreen=START_FULLSCREEN)
 
     # Create all states
-    state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
+    #state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
+    state_show_photo = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
 
     state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
 
