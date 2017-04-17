@@ -26,10 +26,10 @@ PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 PHOTO_DIRECTORY = 'images'
 
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'pygame'
+IO_MANAGER_CLASS = 'raspi'
 
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
+CAMERA_CLASS = 'piggyphoto'
 
 class PhotoBoothState(object):
 
@@ -204,16 +204,22 @@ class StateShowSlideShow(PhotoBoothState):
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
-    def __init__(self, photobooth, next_state, timeout_state = None, counter=-1):
+    def __init__(self, photobooth, next_state, timeout_state = None, failure_state=None, counter=-1):
         super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
-        self.timeout_state=timeout_state
+        self.timeout_state = timeout_state
+        self.failure_state = failure_state
 
     def update_callback(self):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
             self.photobooth.state = self.next_state
-        preview_img = self.photobooth.cam.get_preview()
-        show_cam_picture(self.photobooth.screen, preview_img)
-
+        try:
+            preview_img = self.photobooth.cam.get_preview()
+            show_cam_picture(self.photobooth.screen, preview_img)
+        except Exception as e:
+            print("Getting preview failed:" + str(e))
+            if self.failure_state:
+                self.photobooth.state = self.failure_state
+        
     def _switch_timeout_state(self):
         if self.timeout_state:
             self.photobooth.state = self.timeout_state
@@ -225,16 +231,21 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         self.photobooth.io_manager.set_all_led(LedState.ON)
 
 class StatePhotoTrigger(PhotoBoothState):
-    def __init__(self, photobooth, next_state, counter=-1):
+    def __init__(self, photobooth, next_state, failure_state=None, counter=-1):
         super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._take_photo)
-
+        self.failure_state = failure_state
+        
     def update_callback(self):
-
-        preview_img = self.photobooth.cam.get_preview()
-        show_cam_picture(self.photobooth.screen, preview_img)
-        # Show countdown
-        show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
-        self.photobooth.io_manager.show_led_coutdown(self.counter)
+        try:
+            preview_img = self.photobooth.cam.get_preview()
+            show_cam_picture(self.photobooth.screen, preview_img)
+            # Show countdown
+            show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
+            self.photobooth.io_manager.show_led_coutdown(self.counter)
+        except Exception as e:
+            print("Photo trigger failed:" + str(e))
+            if self.failure_state:
+                self.photobooth.state = self.failure_state
         
     def _take_photo(self):
         #first update to latest preview
@@ -327,6 +338,8 @@ if __name__ == '__main__':
     timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger)
+    state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
+    state_trigger_photo.failure_state = state_waiting_for_camera
 
     #initial app state
     app.state = state_waiting_for_camera
