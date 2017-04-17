@@ -4,11 +4,11 @@ import time
 import glob
 import random
 import os
-from smb.SMBConnection import SMBConnection
 
 from pygame_utils import *
-from user_io import get_user_io_factory, LedState
+from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
+import print_utils
 
 #Configuration
 DEFAULT_RESOLUTION = [640,424]
@@ -29,7 +29,7 @@ PHOTO_DIRECTORY = 'images'
 IO_MANAGER_CLASS = 'pygame'
 
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 class PhotoBoothState(object):
 
@@ -265,32 +265,38 @@ class StateShowPhoto(PhotoBoothState):
 class StatePrinting(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter=-1):
         super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
+        self._error_txt = None
 
     def print_photo(self, photo_file):
-        """
-        In our case we copy the file to a remote windows server that monitors that share and prints the files
-        """
-        smb_user = 'pi'
-        smb_pw = 'TODO'
-        server_name = 'TODO'
-        smb_share = 'test'
-        server_ip = '192.168.0.32'
-        conn = SMBConnection(smb_user, smb_pw,
-                     'raspberry', server_name,
-                     use_ntlm_v2 = True)
-        if conn.connect(server_ip, 139):
-            with open(photo_file, 'wb') as fp:
-                conn.storeFile(smb_share, os.path.basename(fp.name), fp)
-            conn.close()
-        else:
-            print('Cannot connect to server')
-            
+
+        try:
+            print_utils.print_photo(photo_file=photo_file)
+            return True
+        except Exception as e:
+            self._error_txt = str(e)
+            return False
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        show_text(self.photobooth.screen, "Print photo?", (70, 30), 36)
-        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
-            self.print_photo(app.last_photo[1])
+
+        show_text(self.photobooth.screen, "Print photo?", (95, 30), 36)
+        show_text(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), 36)
+        self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
+        self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
+
+        if self._error_txt:
+            show_text(self.photobooth.screen, "Print failure:", (100, 360), 36)
+            show_text(self.photobooth.screen, self._error_txt, (210, 390), 36)
+
+        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
+            if self.print_photo(app.last_photo[1]):
+                self.photobooth.state = self.next_state
+                self._error_txt = None
+            else: # failure
+                self.reset()  # reset timeout counter
+        elif self.photobooth.io_manager.cancel_button_pressed():
             self.photobooth.state = self.next_state
 
     def _switch_to_next_state(self):

@@ -15,6 +15,12 @@ class LedState(object):
     OFF = 0
     ON = 1
 
+class LedType(object):
+    RED = 0
+    YELLOW = 1
+    BLUE = 2
+    GREEN = 3
+
 class AbstractUserIo(object):
     """
     Abstract interface for all additional hardware user interfaces buttons, leds ...
@@ -26,7 +32,32 @@ class AbstractUserIo(object):
         raise NotImplementedError
 
     @abstractmethod
+    def accept_button_pressed(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def cancel_button_pressed(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def set_all_led(self, led_state):
+        """
+        Set state for all leds
+        :param led_state: new state
+        :type led_state: LedState
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_led(self, led_type, led_state):
+        """
+        Set led state for a led of a particular type
+        :param led_type: selected led type
+        :type led_type: LedType
+        :param led_state: new state
+        :type led_state: LedState
+        :return:
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -48,10 +79,19 @@ class PyGameUserIo(AbstractUserIo):
         self._photobooth = photobooth
         pass
 
+    def accept_button_pressed(self):
+        return self._photobooth.event_manager.key_pressed([pygame.K_1])
+
+    def cancel_button_pressed(self):
+        return self._photobooth.event_manager.key_pressed([pygame.K_4])
+
     def any_button_pressed(self):
         keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
         return self._photobooth.event_manager.key_pressed(keys)
 
+    def set_led(self, led_type, led_state):
+        print('set led type' + str(led_type) + ' state' + str(led_state))
+        pass
     def set_all_led(self, led_state):
         print('set all led:', led_state)
         pass
@@ -133,10 +173,10 @@ if found_rpi_module:
     class ButtonRail(AbstractUserIo):
 
         # Adjust configuration if necessary
-        push_buttons = [RaspiPushButton(color='green', button_pin=23, led_pin=18),
-                        RaspiPushButton(color='blue', button_pin=25, led_pin=24),
-                        RaspiPushButton(color='yellow', button_pin=16, led_pin=12),
-                        RaspiPushButton(color='red', button_pin=21, led_pin=20)]
+        push_buttons = {LedType.GREEN:RaspiPushButton(color='green', button_pin=23, led_pin=18),
+                        LedType.BLUE:RaspiPushButton(color='blue', button_pin=25, led_pin=24),
+                        LedType.YELLOW:RaspiPushButton(color='yellow', button_pin=16, led_pin=12),
+                        LedType.RED:RaspiPushButton(color='red', button_pin=21, led_pin=20)}
 
         def __init__(self, **kwargs):
             pass
@@ -148,7 +188,7 @@ if found_rpi_module:
             """
 
             result = False
-            for button in ButtonRail.push_buttons:
+            for key, button in ButtonRail.push_buttons:
                 if button.was_pressed():
                     result = True
                     # do not break in order to reset all buttons
@@ -156,10 +196,19 @@ if found_rpi_module:
 
             return result
 
+        def accept_button_pressed(self):
+            return self.push_buttons[LedType.GREEN].was_pressed()
+
+        def cancel_button_pressed(self):
+            return self.push_buttons[LedType.RED].was_pressed()
+
         def set_all_led(self, led_state):
 
             for button in ButtonRail.push_buttons:
                 button.set_led(led_state)
+
+        def set_led(self, led_type, led_state):
+            self.push_buttons[led_type].set_led(led_state)
 
         def show_led_coutdown(self, counter):
 
