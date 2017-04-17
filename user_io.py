@@ -188,7 +188,7 @@ if found_rpi_module:
             """
 
             result = False
-            for key, button in ButtonRail.push_buttons:
+            for key, button in ButtonRail.push_buttons.iteritems():
                 if button.was_pressed():
                     result = True
                     # do not break in order to reset all buttons
@@ -204,7 +204,7 @@ if found_rpi_module:
 
         def set_all_led(self, led_state):
 
-            for button in ButtonRail.push_buttons:
+            for key, button in ButtonRail.push_buttons.iteritems():
                 button.set_led(led_state)
 
         def set_led(self, led_type, led_state):
@@ -230,7 +230,7 @@ if found_rpi_module:
 
             while True:  # TODO replace endless loop
 
-                for button in ButtonRail.push_buttons:
+                for key, button in ButtonRail.push_buttons.iteritems():
                     if button.is_pressed():
                         print("pressed: ", button.color)
                         button.led_on()
