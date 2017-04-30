@@ -10,12 +10,12 @@ SMB_PW = 'Test1234'
 SERVER_NAME = 'pi-printer'
 SMB_SHARE = 'photos'
 SERVER_IP = '192.168.10.2'
-SERVER_MAC = 'TODO'
+SERVER_MAC = '00.e0.4b.3e.f0.74'
 CLIENT_NAME = 'raspberry'
 
 
 def start_printer():
-    wol.send_magic_packet(SERVER_MAC)
+    wol.send_magic_packet(SERVER_MAC, ip_address=SERVER_IP)
 
 def stop_printer():
     "net rpc shutdown -I 192.168.10.2 -U pi%Test1234 -f"
@@ -65,4 +65,5 @@ def print_photo(photo_file):
 
 if __name__ == '__main__':
     test_foto ='preview.jpg'
-    print_photo(test_foto)
+    #print_photo(test_foto)
+    start_printer()
