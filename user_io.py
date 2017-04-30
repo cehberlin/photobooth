@@ -99,19 +99,19 @@ class PyGameUserIo(AbstractUserIo):
         pass
 
     def accept_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_1])
+        return self._photobooth.event_manager.key_pressed([pygame.K_4])
 
     def cancel_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_4])
+        return self._photobooth.event_manager.key_pressed([pygame.K_1])
 
     def admin_button_pressed(self, reset = False):
         return self._photobooth.event_manager.key_pressed([pygame.K_a])
 
     def next_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_3])
+        return self._photobooth.event_manager.key_pressed([pygame.K_2])
 
     def prev_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_2])
+        return self._photobooth.event_manager.key_pressed([pygame.K_3])
 
     def any_button_pressed(self, reset = False):
         keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]

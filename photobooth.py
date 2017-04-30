@@ -12,6 +12,8 @@ from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
 import print_utils
 
+import gettext
+
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
 START_FULLSCREEN = False
@@ -28,13 +30,16 @@ PHOTO_SHOW_TIME = 5
 SLIDE_SHOW_TIMEOUT = 5
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
+#options 'de', 'en'
+LANGUAGE_ID = 'de'
+
 PHOTO_DIRECTORY = 'images'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'raspi'
+IO_MANAGER_CLASS = 'pygame'
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 class PhotoBoothState(object):
 
@@ -192,7 +197,7 @@ class StateWaitingForCamera(PhotoBoothState):
             self.photobooth.init_camera()
             self.switch_next()
         except Exception as e:
-            show_text_mid(self.photobooth.screen, "Camera not connected: " + str(e),
+            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e),
                           get_text_mid_position(self.photobooth.app_resolution), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
             time.sleep(1)
 
@@ -214,7 +219,7 @@ class StateShowSlideShow(PhotoBoothState):
             show_cam_picture(self.photobooth.screen, self.current_photo)
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
-        show_text_mid(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Slideshow, press any button to continue"), (20, 30), INFO_FONT_SIZE)
 
     def _next_photo(self):
         if len(self._photo_set) > 0:
@@ -261,7 +266,9 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             print("Getting preview failed:" + str(e))
             if self.failure_state:
                 self.photobooth.state = self.failure_state
-        
+
+        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")])
+
     def _switch_timeout_state(self):
         if self.timeout_state:
             self.photobooth.state = self.timeout_state
@@ -316,7 +323,7 @@ class StateShowPhoto(PhotoBoothState):
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        show_text_mid(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Last Photo:"), (20, 30), INFO_FONT_SIZE)
 
 class StatePrinting(PhotoBoothState):
     """
@@ -338,16 +345,18 @@ class StatePrinting(PhotoBoothState):
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
 
-        show_text_mid(self.photobooth.screen, "Print photo?", (95, 30), INFO_FONT_SIZE)
-        show_text_mid(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen,text=_("Print photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
 
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")])
+
         if self._error_txt:
-            show_text_mid(self.photobooth.screen, "Print failure:", (100, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
-            show_text_mid(self.photobooth.screen, self._error_txt, (210, 390), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_left(self.photobooth.screen, _("Print failure:"), (20, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_left(self.photobooth.screen, self._error_txt, (20, 390), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
             if self.print_photo(app.last_photo[1]):
@@ -367,11 +376,11 @@ class StateAdmin(PhotoBoothState):
         super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
         self._options = [
-            ("Return",self.switch_next),
-            ("Close photobooth",self.close_app),
-            ("Shutdown all",self.shutdown_all),
-            ("Start printer",self.start_printer),
-            ("Stop printer",self.stop_printer)
+            (_("Return"), self.switch_next),
+            (_("Close photobooth"), self.close_app),
+            (_("Shutdown all"), self.shutdown_all),
+            (_("Start printer"), self.start_printer),
+            (_("Stop printer"), self.stop_printer)
         ]
 
     def get_free_space(self):
@@ -396,26 +405,29 @@ class StateAdmin(PhotoBoothState):
         draw_rect(self.photobooth.screen,(10,10),(self.photobooth.app_resolution[0]-20, self.photobooth.app_resolution[1]-20))
 
         # Caption
-        show_text_left(self.photobooth.screen, "Administration", (20, 30), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Administration"), (20, 30), INFO_FONT_SIZE)
 
         #Infos
-        show_text_left(self.photobooth.screen, "Free space: " + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, "IP: " + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, "Printer available: " + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, "Taken photos: " + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
 
-        show_text_left(self.photobooth.screen, "Select option:", (20, 190), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Select option:"), (20, 190), INFO_FONT_SIZE, color=COLOR_WHITE                    )
         # Current selected option
-        show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (200, 190), size=INFO_FONT_SIZE, color=COLOR_GREEN)
-        show_text_left(self.photobooth.screen, "Green=Select, Red=Return, Yellow=Next, Blue=Previous", (20, 220), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (20, 220), size=INFO_FONT_SIZE, color=COLOR_GREEN)
+
+        if not self._request_confirmation:
+            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")],pos=(145,340))
 
         #Confirmation request
         if self._request_confirmation:
-            show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0], (20, 250), INFO_SMALL_FONT_SIZE)
-            show_text_left(self.photobooth.screen, "Green=Accept, Red=Cancel", (20, 280),INFO_SMALL_FONT_SIZE)
+            show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0],
+                           (20, 280), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")])
 
         #Error
-        show_text_left(self.photobooth.screen, self._error_text, (20, 250),
+        show_text_left(self.photobooth.screen, self._error_text, (20, 280),
                        size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         #Input handling
@@ -472,6 +484,10 @@ class StateAdmin(PhotoBoothState):
 
 if __name__ == '__main__':
 
+    #localize application
+    language = gettext.translation('photobooth', localedir='locale', languages=[LANGUAGE_ID])
+    language.install(unicode=True)
+
     pygame.init()
 
     # create app
@@ -511,5 +527,5 @@ if __name__ == '__main__':
 
         except Exception as e:
             print(e)
-            show_text_mid(app.screen, "Error", get_text_mid_position(app.app_resolution))
+            show_text_mid(app.screen, _("Error"), get_text_mid_position(app.app_resolution))
         pygame.display.update()

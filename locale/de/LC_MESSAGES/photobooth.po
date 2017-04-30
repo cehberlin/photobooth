@@ -1,0 +1,124 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2017-05-01 18:41+0200\n"
+"PO-Revision-Date: 2017-05-01 18:42+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 1.8.11\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: photobooth.py:200
+msgid "Camera not connected: "
+msgstr "Kamera nicht verbunden:"
+
+#: photobooth.py:222
+msgid "Slideshow, press any button to continue"
+msgstr "Diashow, Beliebige Taste drücken zum Fortsetzen"
+
+#: photobooth.py:270
+msgid "Photo"
+msgstr "Foto"
+
+#: photobooth.py:326
+msgid "Last Photo:"
+msgstr "Letztes Foto:"
+
+#: photobooth.py:348
+msgid "Print photo?"
+msgstr "Foto drucken?"
+
+#: photobooth.py:355
+msgid "Print"
+msgstr "Drucken"
+
+#: photobooth.py:355 photobooth.py:427
+msgid "Cancel"
+msgstr "Abbruch"
+
+#: photobooth.py:358
+msgid "Print failure:"
+msgstr "Druckfehler:"
+
+#: photobooth.py:379
+msgid "Return"
+msgstr "Zurück"
+
+#: photobooth.py:380
+msgid "Close photobooth"
+msgstr "Anwendung beenden"
+
+#: photobooth.py:381
+msgid "Shutdown all"
+msgstr "Alles herunterfahren"
+
+#: photobooth.py:382
+msgid "Start printer"
+msgstr "Drucker starten"
+
+#: photobooth.py:383
+msgid "Stop printer"
+msgstr "Drucker beenden"
+
+#: photobooth.py:408
+msgid "Administration"
+msgstr "Administration"
+
+#: photobooth.py:411
+msgid "Free space: "
+msgstr "Freier Speicherplatz: "
+
+#: photobooth.py:412
+msgid "IP: "
+msgstr "IP:"
+
+#: photobooth.py:413
+msgid "Printer available: "
+msgstr "Drucker erreichbar:"
+
+#: photobooth.py:414
+msgid "Taken photos: "
+msgstr "Anzahl Fotos:"
+
+#: photobooth.py:416
+msgid "Select option:"
+msgstr "Option auswählen:"
+
+#: photobooth.py:421
+msgid "Back"
+msgstr "Zurück"
+
+#: photobooth.py:421
+msgid "Next"
+msgstr ">>"
+
+#: photobooth.py:421
+msgid "Prev"
+msgstr "<<"
+
+#: photobooth.py:421
+msgid "Select"
+msgstr "OK"
+
+#: photobooth.py:427
+msgid "Accept"
+msgstr "OK"
+
+#: photobooth.py:530
+msgid "Error"
+msgstr "Fehler"
+
+#~ msgid "Press GREEN for printing - RED for canceling"
+#~ msgstr "GRÜN drücken zum Drucken - ROT zum Abbrechen"
+
+#~ msgid "Green=Select, Red=Return, Yellow=Next, Blue=Previous"
+#~ msgstr "GRÜN=Auswahl, ROT=Zurück, GELB=Nächste, BLAU=Vorherige"
