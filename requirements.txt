@@ -2,3 +2,4 @@ piggyphoto
 pygame
 RPi
 pysmb
+wakeonlan
