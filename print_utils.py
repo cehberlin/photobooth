@@ -4,9 +4,9 @@ import os
 
 SMB_USER = 'pi'
 SMB_PW = 'Test1234'
-SERVER_NAME = 'toffer'
-SMB_SHARE = 'test'
-SERVER_IP = '192.168.0.32'
+SERVER_NAME = 'pi-printer'
+SMB_SHARE = 'photos'
+SERVER_IP = '192.168.10.2'
 CLIENT_NAME = 'raspberry'
 
 def print_photo( photo_file):
@@ -33,5 +33,5 @@ def print_photo( photo_file):
 
 
 if __name__ == '__main__':
-    test_foto ='snap2.jpg'
+    test_foto ='preview.jpg'
     print_photo(test_foto)
