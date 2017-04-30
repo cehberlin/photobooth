@@ -28,7 +28,11 @@ class AbstractUserIo(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def any_button_pressed(self):
+    def update(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def any_button_pressed(self, reset = False):
         raise NotImplementedError
 
     @abstractmethod
@@ -91,22 +95,25 @@ class PyGameUserIo(AbstractUserIo):
         self._photobooth = photobooth
         pass
 
-    def accept_button_pressed(self):
+    def update(self):
+        pass
+
+    def accept_button_pressed(self, reset = True):
         return self._photobooth.event_manager.key_pressed([pygame.K_1])
 
-    def cancel_button_pressed(self):
+    def cancel_button_pressed(self, reset = True):
         return self._photobooth.event_manager.key_pressed([pygame.K_4])
 
-    def admin_button_pressed(self):
+    def admin_button_pressed(self, reset = False):
         return self._photobooth.event_manager.key_pressed([pygame.K_a])
 
-    def next_button_pressed(self):
+    def next_button_pressed(self, reset = True):
         return self._photobooth.event_manager.key_pressed([pygame.K_3])
 
-    def prev_button_pressed(self):
+    def prev_button_pressed(self, reset = True):
         return self._photobooth.event_manager.key_pressed([pygame.K_2])
 
-    def any_button_pressed(self):
+    def any_button_pressed(self, reset = False):
         keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
         return self._photobooth.event_manager.key_pressed(keys)
 
@@ -169,9 +176,10 @@ if found_rpi_module:
         def is_pressed(self):
             return GPIO.input(self.button_pin) == GPIO.LOW
 
-        def was_pressed(self):
+        def was_pressed(self, reset=True):
             result = self.button_event_state == ButtonState.BUTTON_PRESSED
-            self.reset_button_state()
+            if reset:
+                self.reset_button_state()
             return result
 
         def reset_button_state(self):
@@ -202,7 +210,10 @@ if found_rpi_module:
         def __init__(self, **kwargs):
             pass
 
-        def any_button_pressed(self):
+        def update(self):
+            pass
+        
+        def any_button_pressed(self, reset = False):
             """
             Check if any button was pressed
             :return: true if a button was pressed since last call
@@ -210,28 +221,26 @@ if found_rpi_module:
 
             result = False
             for key, button in ButtonRail.push_buttons.iteritems():
-                if button.was_pressed():
-                    result = True
-                    # do not break in order to reset all buttons
-                    # reset is done inside was_pressed()
+                if button.was_pressed(reset=reset):
+                    result = True                    
 
             return result
 
-        def accept_button_pressed(self):
-            return self.push_buttons[LedType.GREEN].was_pressed()
+        def accept_button_pressed(self, reset = True):
+            return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)
 
-        def cancel_button_pressed(self):
-            return self.push_buttons[LedType.RED].was_pressed()
+        def cancel_button_pressed(self, reset = True):
+            return self.push_buttons[LedType.RED].was_pressed(reset=reset)
 
-        def admin_button_pressed(self):
-            return self.push_buttons[LedType.GREEN].was_pressed() and \
-                   self.push_buttons[LedType.RED].was_pressed()
+        def admin_button_pressed(self, reset = False):
+            return self.push_buttons[LedType.GREEN].was_pressed(reset=reset) and \
+                   self.push_buttons[LedType.RED].was_pressed(reset=reset)
 
-        def next_button_pressed(self):
-            return self.push_buttons[LedType.YELLOW].was_pressed()
+        def next_button_pressed(self, reset = True):
+            return self.push_buttons[LedType.YELLOW].was_pressed(reset=reset)
 
-        def prev_button_pressed(self):
-            return self.push_buttons[LedType.BLUE].was_pressed()
+        def prev_button_pressed(self, reset = True):
+            return self.push_buttons[LedType.BLUE].was_pressed(reset=reset)
 
         def set_all_led(self, led_state):
 

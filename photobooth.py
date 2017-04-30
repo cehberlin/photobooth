@@ -32,9 +32,9 @@ PHOTO_DIRECTORY = 'images'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'pygame'
+IO_MANAGER_CLASS = 'raspi'
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
+CAMERA_CLASS = 'piggyphoto'
 
 class PhotoBoothState(object):
 
@@ -146,6 +146,8 @@ class PhotoBooth(object):
     def update(self):
         self.event_manager.update_events()
         self.state.update()
+        #order is important here
+        self.io_manager.update()
 
     @property
     def last_photo(self):
@@ -205,7 +207,7 @@ class StateShowSlideShow(PhotoBoothState):
         self.current_photo = None
 
     def update_callback(self):
-        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
+        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
 
         if self.current_photo:
@@ -250,7 +252,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         if self.photobooth.io_manager.admin_button_pressed():
             if self.admin_state:
                 self.photobooth.state = self.admin_state
-        elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
+        elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
         try:
             preview_img = self.photobooth.cam.get_preview()
@@ -436,7 +438,7 @@ class StateAdmin(PhotoBoothState):
             if self._request_confirmation:
                 self._request_confirmation = False
             else:
-                self.switch_next()
+                self.switch_last()
         elif self.photobooth.io_manager.next_button_pressed():
             self._current_option_idx += 1
             self._current_option_idx = self._current_option_idx % (len(self._options))
