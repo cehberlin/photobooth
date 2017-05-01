@@ -40,6 +40,18 @@ class AbstractUserIo(object):
         raise NotImplementedError
 
     @abstractmethod
+    def admin_button_pressed(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def next_button_pressed(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def prev_button_pressed(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def set_all_led(self, led_state):
         """
         Set state for all leds
@@ -85,19 +97,28 @@ class PyGameUserIo(AbstractUserIo):
     def cancel_button_pressed(self):
         return self._photobooth.event_manager.key_pressed([pygame.K_4])
 
+    def admin_button_pressed(self):
+        return self._photobooth.event_manager.key_pressed([pygame.K_a])
+
+    def next_button_pressed(self):
+        return self._photobooth.event_manager.key_pressed([pygame.K_3])
+
+    def prev_button_pressed(self):
+        return self._photobooth.event_manager.key_pressed([pygame.K_2])
+
     def any_button_pressed(self):
         keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
         return self._photobooth.event_manager.key_pressed(keys)
 
     def set_led(self, led_type, led_state):
-        print('set led type' + str(led_type) + ' state' + str(led_state))
+        #print('set led type' + str(led_type) + ' state' + str(led_state))
         pass
     def set_all_led(self, led_state):
-        print('set all led:', led_state)
+        #print('set all led:', led_state)
         pass
 
     def show_led_coutdown(self, counter):
-        print('led countdown:', counter)
+        #print('led countdown:', counter)
         pass
 
 #Register the PyGameUserIo implementation
@@ -202,6 +223,16 @@ if found_rpi_module:
         def cancel_button_pressed(self):
             return self.push_buttons[LedType.RED].was_pressed()
 
+        def admin_button_pressed(self):
+            return self.push_buttons[LedType.GREEN].was_pressed() and \
+                   self.push_buttons[LedType.RED].was_pressed()
+
+        def next_button_pressed(self):
+            return self.push_buttons[LedType.YELLOW].was_pressed()
+
+        def prev_button_pressed(self):
+            return self.push_buttons[LedType.BLUE].was_pressed()
+
         def set_all_led(self, led_state):
 
             for key, button in ButtonRail.push_buttons.iteritems():
@@ -211,6 +242,8 @@ if found_rpi_module:
             self.push_buttons[led_type].set_led(led_state)
 
         def show_led_coutdown(self, counter):
+
+            counter = counter % 5
 
             if counter == 4:
                 ButtonRail.push_buttons[0].led_off()
