@@ -1,0 +1,74 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2017-05-01 13:59+0200\n"
+"PO-Revision-Date: 2017-05-01 14:22+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 1.8.11\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: de_DE\n"
+
+#: photobooth.py:195
+msgid "Camera not connected: "
+msgstr "Kamera nicht verbunden:"
+
+#: photobooth.py:217
+msgid "Slideshow, press any button to continue"
+msgstr "Diashow, Beliebige Taste drücken zum Fortsetzen"
+
+#: photobooth.py:319
+msgid "Last Photo:"
+msgstr "Letztes Foto:"
+
+#: photobooth.py:341
+msgid "Print photo?"
+msgstr "Foto drucken?"
+
+#: photobooth.py:342
+msgid "Press GREEN for printing - RED for canceling"
+msgstr "GRÜN drücken zum Drucken - ROT zum Abbrechen"
+
+#: photobooth.py:349
+msgid "Print failure:"
+msgstr "Druckfehler:"
+
+#: photobooth.py:399
+msgid "Administration"
+msgstr "Administration"
+
+#: photobooth.py:402
+msgid "Free space: "
+msgstr "Freier Speicherplatz: "
+
+#: photobooth.py:403
+msgid "IP: "
+msgstr "IP:"
+
+#: photobooth.py:404
+msgid "Printer available: "
+msgstr "Drucker erreichbar:"
+
+#: photobooth.py:405
+msgid "Taken photos: "
+msgstr "Anzahl Fotos:"
+
+#: photobooth.py:407
+msgid "Select option:"
+msgstr "Option auswählen:"
+
+#: photobooth.py:410
+msgid "Green=Select, Red=Return, Yellow=Next, Blue=Previous"
+msgstr "GRÜN=Auswahl, ROT=Zurück, GELB=Nächste, BLAU=Vorherige"
+
+#: photobooth.py:514
+msgid "Error"
+msgstr "Fehler"

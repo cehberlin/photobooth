@@ -1,0 +1,74 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2017-05-01 14:26+0200\n"
+"PO-Revision-Date: 2017-05-01 14:27+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 1.8.11\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: en_US\n"
+
+#: photobooth.py:195
+msgid "Camera not connected: "
+msgstr "Camera not connected: "
+
+#: photobooth.py:217
+msgid "Slideshow, press any button to continue"
+msgstr "Slideshow, press any button to continue"
+
+#: photobooth.py:319
+msgid "Last Photo:"
+msgstr "Last Photo:"
+
+#: photobooth.py:341
+msgid "Print photo?"
+msgstr "Print photo?"
+
+#: photobooth.py:342
+msgid "Press GREEN for printing - RED for canceling"
+msgstr "Press GREEN for printing - RED for canceling"
+
+#: photobooth.py:349
+msgid "Print failure:"
+msgstr "Print failure:"
+
+#: photobooth.py:399
+msgid "Administration"
+msgstr "Administration"
+
+#: photobooth.py:402
+msgid "Free space: "
+msgstr "Free space: "
+
+#: photobooth.py:403
+msgid "IP: "
+msgstr "IP: "
+
+#: photobooth.py:404
+msgid "Printer available: "
+msgstr "Printer available: "
+
+#: photobooth.py:405
+msgid "Taken photos: "
+msgstr "Taken photos: "
+
+#: photobooth.py:407
+msgid "Select option:"
+msgstr "Select option:"
+
+#: photobooth.py:410
+msgid "Green=Select, Red=Return, Yellow=Next, Blue=Previous"
+msgstr "Green=Select, Red=Return, Yellow=Next, Blue=Previous"
+
+#: photobooth.py:514
+msgid "Error"
+msgstr "Error"
