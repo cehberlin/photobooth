@@ -269,6 +269,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
                 self.photobooth.state = self.failure_state
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
+        self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
 
     def _switch_timeout_state(self):
         if self.timeout_state:
