@@ -34,7 +34,7 @@ PHOTO_DIRECTORY = 'images'
 #options 'pygame', 'raspi'
 IO_MANAGER_CLASS = 'pygame'
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 class PhotoBoothState(object):
 
@@ -94,6 +94,9 @@ class PhotoBoothState(object):
     def switch_next(self):
         self.switch_state(self.next_state)
 
+    def switch_last(self):
+        self.switch_state(self.photobooth.last_state)
+
 
 class PhotoBooth(object):
     def __init__(self, fullscreen=False):
@@ -101,6 +104,7 @@ class PhotoBooth(object):
         self.cam = None
         self.screen = None
         self._state = None
+        self._last_state = None
         self._last_photo_resized = None
         self._taken_photos = []
 
@@ -158,8 +162,13 @@ class PhotoBooth(object):
 
     @state.setter
     def state(self, value):
+        self._last_state = self._state
         self._state = value
         self._state.reset()
+
+    @property
+    def last_state(self):
+        return self._last_state
 
 #State machine callback functions
 
