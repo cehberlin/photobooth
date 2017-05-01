@@ -31,7 +31,7 @@ SLIDE_SHOW_TIMEOUT = 5
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
 #options 'de', 'en'
-LANGUAGE_ID = 'en'
+LANGUAGE_ID = 'de'
 
 PHOTO_DIRECTORY = 'images'
 
@@ -266,7 +266,9 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             print("Getting preview failed:" + str(e))
             if self.failure_state:
                 self.photobooth.state = self.failure_state
-        
+
+        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")])
+
     def _switch_timeout_state(self):
         if self.timeout_state:
             self.photobooth.state = self.timeout_state
@@ -343,12 +345,14 @@ class StatePrinting(PhotoBoothState):
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
 
-        show_text_left(self.photobooth.screen, _("Print photo?"), (20, 30), INFO_FONT_SIZE)
-        show_text_left(self.photobooth.screen, _("Press GREEN for printing - RED for canceling"), (20, 60), INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen,text=_("Print photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
+
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")])
 
         if self._error_txt:
             show_text_left(self.photobooth.screen, _("Print failure:"), (20, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
@@ -372,11 +376,11 @@ class StateAdmin(PhotoBoothState):
         super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
         self._options = [
-            ("Return",self.switch_next),
-            ("Close photobooth",self.close_app),
-            ("Shutdown all",self.shutdown_all),
-            ("Start printer",self.start_printer),
-            ("Stop printer",self.stop_printer)
+            (_("Return"), self.switch_next),
+            (_("Close photobooth"), self.close_app),
+            (_("Shutdown all"), self.shutdown_all),
+            (_("Start printer"), self.start_printer),
+            (_("Stop printer"), self.stop_printer)
         ]
 
     def get_free_space(self):
@@ -404,20 +408,23 @@ class StateAdmin(PhotoBoothState):
         show_text_left(self.photobooth.screen, _("Administration"), (20, 30), INFO_FONT_SIZE)
 
         #Infos
-        show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE)
-        show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
 
-        show_text_left(self.photobooth.screen, _("Select option:"), (20, 190), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Select option:"), (20, 190), INFO_FONT_SIZE, color=COLOR_WHITE                    )
         # Current selected option
         show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (20, 220), size=INFO_FONT_SIZE, color=COLOR_GREEN)
-        show_text_left(self.photobooth.screen, _("Green=Select, Red=Return, Yellow=Next, Blue=Previous"), (20, 250), INFO_SMALL_FONT_SIZE)
+
+        if not self._request_confirmation:
+            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")],pos=(145,340))
 
         #Confirmation request
         if self._request_confirmation:
-            show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0], (20, 280), INFO_SMALL_FONT_SIZE)
-            show_text_left(self.photobooth.screen, "Green=Accept, Red=Cancel", (20, 310),INFO_SMALL_FONT_SIZE)
+            show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0],
+                           (20, 280), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")])
 
         #Error
         show_text_left(self.photobooth.screen, self._error_text, (20, 280),

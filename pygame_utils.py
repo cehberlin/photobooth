@@ -6,9 +6,10 @@ COLOR_GREEN = (34,139,34)
 COLOR_RED = (200,0,0)
 COLOR_WHITE = (255, 255, 255)
 COLOR_GREY = (220,220,220)
-COLOR_YELLOW = (255,255,0)
+COLOR_YELLOW = (240,230,140)
 COLOR_BLUE =(0,0,255)
 COLOR_ORANGE = (210,105,30)
+COLOR_DARK_GREY = (105, 105, 105)
 
 class PyGameEventManager(object):
     """
@@ -80,9 +81,39 @@ def get_text_img(text, size, color):
 
     return font.render(text, True, color)
 
-
-def draw_rect(screen, pos, size, color=COLOR_GREY):
+def draw_rect(screen, pos, size, color=COLOR_GREY, color_border=None, size_border = 1):
     pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
+    if color_border:
+        pygame.draw.rect(screen, color_border, (pos[0], pos[1], size[0], size[1]),size_border)
+
+def draw_circle(screen, pos, size, color, color_border=None, size_border = 1):
+    pygame.draw.circle(screen, color, pos, size)
+    if color_border:
+        pygame.draw.circle(screen, color_border, pos, size, size_border)
+
+def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10):
+
+    txt_img = get_text_img(text, size, text_color)
+
+    rect_size = (txt_img.get_width() + margin*2, txt_img.get_height() + margin*2)
+
+    #vertical center alignment
+    if not pos[0]:
+        pos_x = get_text_mid_position(screen.get_size())[0] - rect_size[0]//2
+    else:
+        pos_x = pos[0]
+
+    # horizontal center alignment
+    if not pos[1]:
+        pos_y = get_text_mid_position(screen.get_size())[1] - rect_size[1] // 2
+    else:
+        pos_y = pos[1]
+
+    rect_pos = (pos_x - margin, pos_y - margin)
+
+    draw_rect(screen=screen, pos=rect_pos, size=rect_size, color=box_color, color_border=border_color)
+
+    screen.blit(txt_img,(pos_x,pos_y))
 
 def show_text_mid(screen, text, mid_pos, size=DEFAULT_FONT_SIZE, color=COLOR_WHITE):
     """
@@ -108,3 +139,24 @@ def show_text_left(screen, text, pos, size=DEFAULT_FONT_SIZE,  color=COLOR_WHITE
     """
     txt_img = get_text_img(text, size, color)
     screen.blit(txt_img,pos)
+
+
+def draw_button_bar(screen, text=["","","",""], pos=(145,380), size=40, font_size=32, margin=30):
+    pos_x = pos[0]
+    pos_y = pos[1]
+
+    if text[0]:
+        draw_circle(screen=screen,pos=(pos_x,pos_y), size=size, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen,text=text[0],mid_pos=(pos_x,pos_y),size=font_size,color=COLOR_WHITE)
+    pos_x+=margin+size*2
+    if text[1]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_BLUE, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+    pos_x += margin + size*2
+    if text[2]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+    pos_x += margin + size*2
+    if text[3]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[3], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
