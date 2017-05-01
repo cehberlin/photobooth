@@ -141,22 +141,32 @@ def show_text_left(screen, text, pos, size=DEFAULT_FONT_SIZE,  color=COLOR_WHITE
     screen.blit(txt_img,pos)
 
 
-def draw_button_bar(screen, text=["","","",""], pos=(145,380), size=40, font_size=32, margin=30):
+def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=30):
     pos_x = pos[0]
     pos_y = pos[1]
 
+    bar_width = 6 * radius + 4 * margin
+
+    # vertical center alignment
+    if not pos_x:
+        pos_x = get_text_mid_position(screen.get_size())[0] - bar_width//2
+
+    # horizontal center alignment
+    if not pos_y:
+        pos_y = get_text_mid_position(screen.get_size())[1] - radius // 2
+
     if text[0]:
-        draw_circle(screen=screen,pos=(pos_x,pos_y), size=size, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x,pos_y), size=radius, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen,text=text[0],mid_pos=(pos_x,pos_y),size=font_size,color=COLOR_WHITE)
-    pos_x+=margin+size*2
+    pos_x+= margin + radius * 2
     if text[1]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_BLUE, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_BLUE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
-    pos_x += margin + size*2
+    pos_x += margin + radius * 2
     if text[2]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
-    pos_x += margin + size*2
+    pos_x += margin + radius * 2
     if text[3]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=size, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[3], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
