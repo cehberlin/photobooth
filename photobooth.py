@@ -4,7 +4,9 @@ import time
 import glob
 import random
 import os
+import socket
 
+#Own modules
 from pygame_utils import *
 from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
@@ -16,6 +18,7 @@ START_FULLSCREEN = False
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
+INFO_SMALL_FONT_SIZE = 24
 
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
@@ -26,10 +29,10 @@ PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 PHOTO_DIRECTORY = 'images'
 
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'raspi'
+IO_MANAGER_CLASS = 'pygame'
 
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 class PhotoBoothState(object):
 
@@ -82,6 +85,12 @@ class PhotoBoothState(object):
 
     def is_counter_enabled(self):
         return self.counter > -1
+
+    def switch_state(self, state):
+        self.photobooth.state = state
+
+    def switch_next(self):
+        self.switch_state(self.next_state)
 
 
 class PhotoBooth(object):
@@ -160,9 +169,9 @@ class StateWaitingForCamera(PhotoBoothState):
         # try initialisation again
         try:
             self.photobooth.init_camera()
-            self.photobooth.state = self.next_state
+            self.switch_next()
         except Exception as e:
-            show_text(self.photobooth.screen, "Camera not connected: "+str(e), get_text_mid_position(self.photobooth.app_resolution))
+            show_text_mid(self.photobooth.screen, "Camera not connected: " + str(e), get_text_mid_position(self.photobooth.app_resolution))
             time.sleep(1)
 
 
@@ -174,12 +183,13 @@ class StateShowSlideShow(PhotoBoothState):
 
     def update_callback(self):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
-            self.photobooth.state = self.next_state
+            self.switch_next()
 
         if self.current_photo:
             show_cam_picture(self.photobooth.screen, self.current_photo)
 
-        show_text(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), INFO_FONT_SIZE)
+        self.photobooth.io_manager.show_led_coutdown(self.counter)
+        show_text_mid(self.photobooth.screen, "Slideshow, press any button to continue", (100, 30), INFO_FONT_SIZE)
 
     def _next_photo(self):
         if len(self._photo_set) > 0:
@@ -204,14 +214,18 @@ class StateShowSlideShow(PhotoBoothState):
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
-    def __init__(self, photobooth, next_state, timeout_state = None, failure_state=None, counter=-1):
+    def __init__(self, photobooth, next_state, timeout_state = None, admin_state=None,failure_state=None, counter=-1):
         super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
         self.timeout_state = timeout_state
         self.failure_state = failure_state
+        self.admin_state = admin_state
 
     def update_callback(self):
-        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
-            self.photobooth.state = self.next_state
+        if self.photobooth.io_manager.admin_button_pressed():
+            if self.admin_state:
+                self.photobooth.state = self.admin_state
+        elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed():
+            self.switch_next()
         try:
             preview_img = self.photobooth.cam.get_preview()
             show_cam_picture(self.photobooth.screen, preview_img)
@@ -240,7 +254,7 @@ class StatePhotoTrigger(PhotoBoothState):
             preview_img = self.photobooth.cam.get_preview()
             show_cam_picture(self.photobooth.screen, preview_img)
             # Show countdown
-            show_text(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
+            show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
             self.photobooth.io_manager.show_led_coutdown(self.counter)
         except Exception as e:
             print("Photo trigger failed:" + str(e))
@@ -259,23 +273,20 @@ class StatePhotoTrigger(PhotoBoothState):
 
         self.photobooth.io_manager.set_all_led(LedState.ON)
 
-        self.photobooth.state = self.next_state
+        self.switch_next()
 
 
 class StateShowPhoto(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter=-1):
-        super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
+        super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        show_text(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
-
-    def _switch_to_next_state(self):
-        self.photobooth.state = self.next_state
+        show_text_mid(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
 
 class StatePrinting(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter=-1):
-        super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_to_next_state)
+        super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
         self._error_txt = None
 
     def print_photo(self, photo_file):
@@ -290,32 +301,134 @@ class StatePrinting(PhotoBoothState):
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
 
-        show_text(self.photobooth.screen, "Print photo?", (95, 30), 36)
-        show_text(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), 36)
+        show_text_mid(self.photobooth.screen, "Print photo?", (95, 30), 36)
+        show_text_mid(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), 36)
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
 
         if self._error_txt:
-            show_text(self.photobooth.screen, "Print failure:", (100, 360), 36)
-            show_text(self.photobooth.screen, self._error_txt, (210, 390), 36)
+            show_text_mid(self.photobooth.screen, "Print failure:", (100, 360), 36)
+            show_text_mid(self.photobooth.screen, self._error_txt, (210, 390), 36)
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
             if self.print_photo(app.last_photo[1]):
-                self.photobooth.state = self.next_state
+                self.switch_next()
                 self._error_txt = None
             else: # failure
                 self.reset()  # reset timeout counter
         elif self.photobooth.io_manager.cancel_button_pressed():
-            self.photobooth.state = self.next_state
+            self.switch_next()
 
-    def _switch_to_next_state(self):
-        """
-        This is just a timeout behaviour
-        """
-        self.photobooth.state = self.next_state
 
+class StateAdmin(PhotoBoothState):
+    def __init__(self, photobooth, next_state, counter=-1):
+        super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
+
+        self._options = [
+            ("Return",self.switch_next),
+            ("Close photobooth",self.close_app),
+            ("Shutdown all",self.shutdown_all),
+            ("Start printer",self.start_printer),
+            ("Stop printer",self.stop_printer)
+        ]
+
+    def get_free_space(self):
+        """
+        Determine free space in current directory
+        :return: free space in MB
+        """
+        st = os.statvfs('.')
+        free_mb = st.f_bsize * st.f_bavail // 1024 // 1024
+        return free_mb
+
+    def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+
+    def get_number_taken_photos(self):
+        return len(glob.glob(PHOTO_DIRECTORY + "/*.jpg"))
+
+    def update_callback(self):
+        # Background
+        draw_rect(self.photobooth.screen,(10,10),(self.photobooth.app_resolution[0]-20, self.photobooth.app_resolution[1]-20))
+
+        # Caption
+        show_text_left(self.photobooth.screen, "Administration", (20, 30), INFO_FONT_SIZE)
+
+        #Infos
+        show_text_left(self.photobooth.screen, "Free space: " + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, "IP: " + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, "Printer available: " + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE)
+        show_text_left(self.photobooth.screen, "Taken photos: " + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE)
+
+        show_text_left(self.photobooth.screen, "Select option:", (20, 190), INFO_FONT_SIZE)
+        # Current selected option
+        show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (200, 190), size=INFO_FONT_SIZE, color=COLOR_GREEN)
+        show_text_left(self.photobooth.screen, "Green=Select, Red=Return, Yellow=Next, Blue=Previous", (20, 220), INFO_SMALL_FONT_SIZE)
+
+        #Confirmation request
+        if self._request_confirmation:
+            show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0], (20, 250), INFO_SMALL_FONT_SIZE)
+            show_text_left(self.photobooth.screen, "Green=Accept, Red=Cancel", (20, 280),INFO_SMALL_FONT_SIZE)
+
+        #Error
+        show_text_left(self.photobooth.screen, self._error_text, (20, 250),
+                       size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+
+        #Input handling
+        if self._option_confirmed:
+            try:
+                self._options[self._current_option_idx][1]()
+                self._error_text = ""
+            except Exception as e:
+                self._error_text = str(e)
+            self._option_confirmed = False
+            self._request_confirmation = False
+
+        if self.photobooth.io_manager.accept_button_pressed():
+            if self._request_confirmation:
+                self._option_confirmed = True
+                self._request_confirmation = False
+            else:
+                self._request_confirmation = True
+        elif self.photobooth.io_manager.cancel_button_pressed():
+            if self._request_confirmation:
+                self._request_confirmation = False
+            else:
+                self.switch_next()
+        elif self.photobooth.io_manager.next_button_pressed():
+            self._current_option_idx += 1
+            self._current_option_idx = self._current_option_idx % (len(self._options))
+        elif self.photobooth.io_manager.prev_button_pressed():
+            self._current_option_idx -= 1
+            self._current_option_idx = self._current_option_idx % (len(self._options))
+
+    def close_app(self):
+        pygame.quit()
+
+    def start_printer(self):
+        print_utils.start_printer()
+
+    def stop_printer(self):
+        print_utils.stop_printer()
+
+    def shutdown_all(self):
+        print_utils.stop_printer()
+        os.system('systemctl poweroff')
+
+    def reset(self):
+        super(StateAdmin, self).reset()
+        self._free_space = self.get_free_space()
+        self._ip_address = self.get_ip_address()
+        self._printer_state = print_utils.printer_available()
+        self._taken_photos = self.get_number_taken_photos()
+        self._current_option_idx = 0
+        self._option_confirmed = False
+        self._request_confirmation = False
+        self._error_text = ""
 
 if __name__ == '__main__':
 
@@ -325,14 +438,18 @@ if __name__ == '__main__':
     app = PhotoBooth(fullscreen=START_FULLSCREEN)
 
     # Create all states
-    #state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME)
+    #state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME) # enable this state to use without printing
     state_show_photo = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
+
+    state_admin = StateAdmin(photobooth=app, next_state=None)
 
     state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
 
     timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
 
-    state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo, timeout_state=timeout_slide_show, counter=PHOTO_TIMEOUT)
+    state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo,
+                                                                  admin_state=state_admin, timeout_state=timeout_slide_show,
+                                                                  counter=PHOTO_TIMEOUT)
 
     state_show_photo.next_state = state_waiting_for_photo_trigger
     timeout_slide_show.next_state = state_waiting_for_photo_trigger
@@ -340,6 +457,7 @@ if __name__ == '__main__':
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger)
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
+    state_admin.next_state = state_waiting_for_camera
 
     #initial app state
     app.state = state_waiting_for_camera
@@ -353,5 +471,5 @@ if __name__ == '__main__':
 
         except Exception as e:
             print(e)
-            show_text(app.screen, "Error", get_text_mid_position(app.app_resolution))
+            show_text_mid(app.screen, "Error", get_text_mid_position(app.app_resolution))
         pygame.display.update()

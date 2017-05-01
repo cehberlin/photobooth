@@ -2,6 +2,14 @@ import pygame
 
 DEFAULT_FONT_SIZE = 72
 
+COLOR_GREEN = (34,139,34)
+COLOR_RED = (200,0,0)
+COLOR_WHITE = (255, 255, 255)
+COLOR_GREY = (220,220,220)
+COLOR_YELLOW = (255,255,0)
+COLOR_BLUE =(0,0,255)
+COLOR_ORANGE = (210,105,30)
+
 class PyGameEventManager(object):
     """
     Classes caches and simplifies pygame event management
@@ -72,7 +80,31 @@ def get_text_img(text, size, color):
 
     return font.render(text, True, color)
 
-def show_text(screen, text, pos, size=DEFAULT_FONT_SIZE):
-    txt_img = get_text_img(text, size, (255, 255, 255))
+
+def draw_rect(screen, pos, size, color=COLOR_GREY):
+    pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
+
+def show_text_mid(screen, text, mid_pos, size=DEFAULT_FONT_SIZE, color=COLOR_WHITE):
+    """
+    Show text using mid position for entire text
+    :param screen:
+    :param text:
+    :param mid_pos:
+    :param size:
+    :return:
+    """
+    txt_img = get_text_img(text, size, color)
     screen.blit(txt_img,
-                (pos[0] - txt_img.get_width() // 2, pos[1] - txt_img.get_height() // 2))
+                (mid_pos[0] - txt_img.get_width() // 2, mid_pos[1] - txt_img.get_height() // 2))
+
+def show_text_left(screen, text, pos, size=DEFAULT_FONT_SIZE,  color=COLOR_WHITE):
+    """
+    Show text with left pos reference position
+    :param screen:
+    :param text:
+    :param pos:
+    :param size:
+    :return:
+    """
+    txt_img = get_text_img(text, size, color)
+    screen.blit(txt_img,pos)
