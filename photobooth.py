@@ -267,7 +267,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             if self.failure_state:
                 self.photobooth.state = self.failure_state
 
-        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")])
+        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
 
     def _switch_timeout_state(self):
         if self.timeout_state:
@@ -352,7 +352,7 @@ class StatePrinting(PhotoBoothState):
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
 
-        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")])
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None,self.photobooth.app_resolution[1]-60))
 
         if self._error_txt:
             show_text_left(self.photobooth.screen, _("Print failure:"), (20, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
@@ -418,13 +418,13 @@ class StateAdmin(PhotoBoothState):
         show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (20, 220), size=INFO_FONT_SIZE, color=COLOR_GREEN)
 
         if not self._request_confirmation:
-            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")],pos=(145,340))
+            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
 
         #Confirmation request
         if self._request_confirmation:
             show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0],
                            (20, 280), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
-            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")])
+            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")], pos=(None,self.photobooth.app_resolution[1]-60))
 
         #Error
         show_text_left(self.photobooth.screen, self._error_text, (20, 280),
