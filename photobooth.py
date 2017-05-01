@@ -12,13 +12,15 @@ from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
 import print_utils
 
-#Configuration
+#Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
 START_FULLSCREEN = False
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
 INFO_SMALL_FONT_SIZE = 24
+
+# Core configurations
 
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
@@ -28,11 +30,11 @@ PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
 PHOTO_DIRECTORY = 'images'
 
+# Implementation configuration / module selection
 #options 'pygame', 'raspi'
 IO_MANAGER_CLASS = 'pygame'
-
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
+CAMERA_CLASS = 'piggyphoto'
 
 class PhotoBoothState(object):
 
@@ -162,20 +164,32 @@ class PhotoBooth(object):
 #State machine callback functions
 
 class StateWaitingForCamera(PhotoBoothState):
-    def __init__(self, photobooth, next_state):
+    """
+    Initial state that waits for the camera becoming available
+    This state can also be used to return in failure case
+    """
+    def __init__(self, photobooth, next_state, admin_state):
         super(StateWaitingForCamera, self).__init__(photobooth=photobooth, next_state=next_state)
+        self.admin_state = admin_state
 
     def update_callback(self):
         # try initialisation again
         try:
+            if self.photobooth.io_manager.admin_button_pressed():
+                if self.admin_state:
+                    self.photobooth.state = self.admin_state
             self.photobooth.init_camera()
             self.switch_next()
         except Exception as e:
-            show_text_mid(self.photobooth.screen, "Camera not connected: " + str(e), get_text_mid_position(self.photobooth.app_resolution))
+            show_text_mid(self.photobooth.screen, "Camera not connected: " + str(e),
+                          get_text_mid_position(self.photobooth.app_resolution), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
             time.sleep(1)
 
 
 class StateShowSlideShow(PhotoBoothState):
+    """
+    State showing already taken photos in a random order slide show
+    """
     def __init__(self, photobooth, next_state, counter):
         super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
         self._photo_set = []
@@ -214,6 +228,9 @@ class StateShowSlideShow(PhotoBoothState):
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
+    """
+    State waiting for people initiating the next photo
+    """
     def __init__(self, photobooth, next_state, timeout_state = None, admin_state=None,failure_state=None, counter=-1):
         super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
         self.timeout_state = timeout_state
@@ -245,6 +262,9 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         self.photobooth.io_manager.set_all_led(LedState.ON)
 
 class StatePhotoTrigger(PhotoBoothState):
+    """
+    Count down photo trigger state
+    """
     def __init__(self, photobooth, next_state, failure_state=None, counter=-1):
         super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._take_photo)
         self.failure_state = failure_state
@@ -277,6 +297,9 @@ class StatePhotoTrigger(PhotoBoothState):
 
 
 class StateShowPhoto(PhotoBoothState):
+    """
+    State for showing the last taken photo
+    """
     def __init__(self, photobooth, next_state, counter=-1):
         super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
@@ -285,6 +308,9 @@ class StateShowPhoto(PhotoBoothState):
         show_text_mid(self.photobooth.screen, "Last Photo:", (70, 30), INFO_FONT_SIZE)
 
 class StatePrinting(PhotoBoothState):
+    """
+    State for selecting print out
+    """
     def __init__(self, photobooth, next_state, counter=-1):
         super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
         self._error_txt = None
@@ -301,16 +327,16 @@ class StatePrinting(PhotoBoothState):
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
 
-        show_text_mid(self.photobooth.screen, "Print photo?", (95, 30), 36)
-        show_text_mid(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), 36)
+        show_text_mid(self.photobooth.screen, "Print photo?", (95, 30), INFO_FONT_SIZE)
+        show_text_mid(self.photobooth.screen, "Press GREEN for printing - RED for canceling", (285, 60), INFO_FONT_SIZE)
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
 
         if self._error_txt:
-            show_text_mid(self.photobooth.screen, "Print failure:", (100, 360), 36)
-            show_text_mid(self.photobooth.screen, self._error_txt, (210, 390), 36)
+            show_text_mid(self.photobooth.screen, "Print failure:", (100, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_mid(self.photobooth.screen, self._error_txt, (210, 390), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
             if self.print_photo(app.last_photo[1]):
@@ -323,6 +349,9 @@ class StatePrinting(PhotoBoothState):
 
 
 class StateAdmin(PhotoBoothState):
+    """
+    Administration info and command option state
+    """
     def __init__(self, photobooth, next_state, counter=-1):
         super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
@@ -454,7 +483,7 @@ if __name__ == '__main__':
     state_show_photo.next_state = state_waiting_for_photo_trigger
     timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
-    state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger)
+    state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger, admin_state=state_admin)
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
     state_admin.next_state = state_waiting_for_camera
