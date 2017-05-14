@@ -442,9 +442,21 @@ class StateFilter(PhotoBoothState):
 
         draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")], pos=(None,self.photobooth.app_resolution[1]-60))
 
+
         for i in range(len(self.filter_photos)):
             if self.photobooth.io_manager.button_idx_pressed(idx=i):
-                self.photobooth.last_photo = self.filter_photos[i]
+                selected_photo = self.filter_photos[i]
+
+                path, ext = os.path.splitext(app.last_photo[1])
+
+                filter_file = path + '_filtered' + ext
+
+                shutil.move(selected_photo[1], filter_file)
+                #reload image to use the correct scaling
+                photo_obj = pygame.image.load(selected_photo[1])
+                photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
+                self.photobooth.last_photo = ( photo_obj, filter_file)
+                break
 
     def reset(self):
         super(StateFilter, self).reset()
