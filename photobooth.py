@@ -393,11 +393,48 @@ class StateFilter(PhotoBoothState):
 
         self._picture_size = ()
 
-    def filter_photo(self, photo, idx):
+    def filter_photo_fullsize(self, photo, idx , dest):
+        """
+        filter photo in full resolution
+        :param photo: tuple (pygame.image,path)
+        :param idx: filter_idx to apply
+        :param dest: destination path of photo
+        :return: tuple (pygame.image,path) of new photo
+        """
         # Copy photo file
-        filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
+        filter_file = dest
         shutil.copy(photo[1], filter_file)
 
+        self.apply_photo_filter(filter_file, idx)
+
+        photo_obj = pygame.image.load(filter_file)
+
+        photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
+
+        return photo_obj, filter_file
+
+    def filter_photo_preview(self, photo, idx):
+        """
+        create a small preview filter img
+        :param photo: tuple (pygame.image,path)
+        :param idx: filter_idx to apply
+        :return: tuple (pygame.image,path) of new photo
+        """
+
+        # Copy photo file
+        photo_obj = copy.copy(photo[0])
+
+        filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
+
+        pygame.image.save(photo_obj, filter_file)
+
+        self.apply_photo_filter(filter_file, idx)
+
+        photo_obj = pygame.image.load(filter_file)
+
+        return photo_obj, filter_file
+
+    def apply_photo_filter(self, filter_file, idx):
         fil = None
         if idx == 1:
             fil = Nashville(filter_file)
@@ -405,22 +442,17 @@ class StateFilter(PhotoBoothState):
             fil = Gotham(filter_file)
         if idx == 3:
             fil = BlackAndWhite(filter_file)
-
         fil.apply()
-
-        photo_obj = pygame.image.load(filter_file)
-
-        photo_obj = pygame.transform.scale(photo_obj, self._picture_size)
-
-        return photo_obj, filter_file
 
     def create_filtered_photos(self):
 
+        scaled_original_photo = (pygame.transform.scale(app.last_photo[0], self._picture_size), app.last_photo[1])
+
         self.filter_photos = [
-            (pygame.transform.scale(app.last_photo[0], self._picture_size), app.last_photo[1]),
-            self.filter_photo(photo=self.photobooth.last_photo, idx=1),
-            self.filter_photo(photo=self.photobooth.last_photo, idx=2),
-            self.filter_photo(photo=self.photobooth.last_photo, idx=3)
+            scaled_original_photo,
+            self.filter_photo_preview(photo=scaled_original_photo, idx=1),
+            self.filter_photo_preview(photo=scaled_original_photo, idx=2),
+            self.filter_photo_preview(photo=scaled_original_photo, idx=3)
         ]
 
     def draw_filtered_photos(self):
@@ -445,17 +477,12 @@ class StateFilter(PhotoBoothState):
 
         for i in range(len(self.filter_photos)):
             if self.photobooth.io_manager.button_idx_pressed(idx=i):
-                selected_photo = self.filter_photos[i]
-
+                # create final file name
                 path, ext = os.path.splitext(app.last_photo[1])
 
                 filter_file = path + '_filtered' + ext
-
-                shutil.move(selected_photo[1], filter_file)
-                #reload image to use the correct scaling
-                photo_obj = pygame.image.load(selected_photo[1])
-                photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
-                self.photobooth.last_photo = ( photo_obj, filter_file)
+                # redo filtering on full image resolution
+                self.photobooth.last_photo = self.filter_photo_fullsize(photo=app.last_photo,idx=i,dest=filter_file)
                 break
 
     def reset(self):
