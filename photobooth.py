@@ -34,6 +34,7 @@ PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 LANGUAGE_ID = 'de'
 
 PHOTO_DIRECTORY = 'images'
+TEMP_DIRECTORY = 'tmp'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
@@ -137,7 +138,7 @@ class PhotoBooth(object):
             os.makedirs(PHOTO_DIRECTORY)
 
     def init_camera(self):
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY)
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
         picture = self.cam.get_preview()
         
         if self.fullscreen:
