@@ -53,7 +53,7 @@ def get_camera_factory():
     Provide external access to the factory instance
     :return: factory instance
     """
-    return camera_factory;
+    return camera_factory
 
 
 class PiggyphotoCamera(AbstractCamera):
@@ -85,14 +85,18 @@ class PiggyphotoCamera(AbstractCamera):
 
     def get_preview(self):
         file = self._tmp_directory +'/preview.jpg'
-        self.cam.capture_preview()
+        self.cam.capture_preview(destpath=file)
         picture = pygame.image.load(file)
         return picture
 
     def take_photo(self):
-        photo_name = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
-        self.cam.capture_image(photo_name)
-        return pygame.image.load(photo_name), photo_name
+        """
+        Trigger photo capture
+        :return:  tuple of pygame image and path to file
+        """
+        file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
+        self.cam.capture_image(destpath=file)
+        return pygame.image.load(file), file
 
     def __del__(self):
         if self.cam:
