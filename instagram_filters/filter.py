@@ -1,7 +1,7 @@
 # inspired from http://net.tutsplus.com/tutorials/php/create-instagram-filters-with-php/
 
 import subprocess
-import Image
+from PIL import Image
 import math
 
 class Filter:
