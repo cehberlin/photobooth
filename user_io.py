@@ -36,6 +36,10 @@ class AbstractUserIo(object):
         raise NotImplementedError
 
     @abstractmethod
+    def button_idx_pressed(self, idx):
+        raise NotImplementedError
+
+    @abstractmethod
     def accept_button_pressed(self):
         raise NotImplementedError
 
@@ -112,6 +116,16 @@ class PyGameUserIo(AbstractUserIo):
 
     def prev_button_pressed(self, reset = True):
         return self._photobooth.event_manager.key_pressed([pygame.K_3])
+
+    def button_idx_pressed(self, idx):
+        if idx == 0:
+            return self._photobooth.event_manager.key_pressed([pygame.K_1])
+        if idx == 1:
+            return self._photobooth.event_manager.key_pressed([pygame.K_2])
+        if idx == 2:
+            return self._photobooth.event_manager.key_pressed([pygame.K_3])
+        if idx == 3:
+            return self._photobooth.event_manager.key_pressed([pygame.K_4])
 
     def any_button_pressed(self, reset = False):
         keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
@@ -225,6 +239,16 @@ if found_rpi_module:
                     result = True                    
 
             return result
+
+        def button_idx_pressed(self, idx):
+            if idx == 0:
+                return self.push_buttons[LedType.RED].was_pressed(reset=True)
+            if idx == 1:
+                return self.push_buttons[LedType.YELLOW].was_pressed(reset=True)
+            if idx == 2:
+                return self.push_buttons[LedType.BLUE].was_pressed(reset=True)
+            if idx == 3:
+                return self.push_buttons[LedType.GREEN].was_pressed(reset=True)
 
         def accept_button_pressed(self, reset = True):
             return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)

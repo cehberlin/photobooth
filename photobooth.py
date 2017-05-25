@@ -5,11 +5,14 @@ import glob
 import random
 import os
 import socket
+import copy
+import shutil
 
 #Own modules
 from pygame_utils import *
 from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
+from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
 import print_utils
 
 import gettext
@@ -34,6 +37,7 @@ PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 LANGUAGE_ID = 'de'
 
 PHOTO_DIRECTORY = 'images'
+TEMP_DIRECTORY = 'tmp'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
@@ -112,6 +116,7 @@ class PhotoBooth(object):
         self._last_state = None
         self._last_photo_resized = None
         self._taken_photos = []
+        self._tmp_dir = TEMP_DIRECTORY
 
         self.fullscreen=fullscreen
         # Detect the screen resolution
@@ -137,7 +142,7 @@ class PhotoBooth(object):
             os.makedirs(PHOTO_DIRECTORY)
 
     def init_camera(self):
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY)
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
         picture = self.cam.get_preview()
         
         if self.fullscreen:
@@ -269,6 +274,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
                 self.photobooth.state = self.failure_state
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
+        self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
 
     def _switch_timeout_state(self):
         if self.timeout_state:
@@ -374,6 +380,123 @@ class StatePrinting(PhotoBoothState):
                 self.reset()  # reset timeout counter
         elif self.photobooth.io_manager.cancel_button_pressed():
             self.switch_next()
+
+
+class StateFilter(PhotoBoothState):
+    """
+    State for providing several filter options of the photo
+    """
+    def __init__(self, photobooth, next_state, counter=-1):
+        super(StateFilter, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
+
+        self.filter_photos = []
+
+        self._picture_size = ()
+
+    def filter_photo_fullsize(self, photo, idx , dest):
+        """
+        filter photo in full resolution
+        :param photo: tuple (pygame.image,path)
+        :param idx: filter_idx to apply
+        :param dest: destination path of photo
+        :return: tuple (pygame.image,path) of new photo
+        """
+        # Copy photo file
+        filter_file = dest
+        shutil.copy(photo[1], filter_file)
+
+        self.apply_photo_filter(filter_file, idx)
+
+        photo_obj = pygame.image.load(filter_file)
+
+        photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
+
+        return photo_obj, filter_file
+
+    def filter_photo_preview(self, photo, idx):
+        """
+        create a small preview filter img
+        :param photo: tuple (pygame.image,path)
+        :param idx: filter_idx to apply
+        :return: tuple (pygame.image,path) of new photo
+        """
+
+        # Copy photo file
+        photo_obj = copy.copy(photo[0])
+
+        filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
+
+        pygame.image.save(photo_obj, filter_file)
+
+        self.apply_photo_filter(filter_file, idx)
+
+        photo_obj = pygame.image.load(filter_file)
+
+        return photo_obj, filter_file
+
+    def apply_photo_filter(self, filter_file, idx):
+        fil = None
+        if idx == 1:
+            fil = Nashville(filter_file)
+        if idx == 2:
+            fil = Gotham(filter_file)
+        if idx == 3:
+            fil = BlackAndWhite(filter_file)
+        fil.apply()
+
+    def create_filtered_photos(self):
+
+        scaled_original_photo = (pygame.transform.scale(app.last_photo[0], self._picture_size), app.last_photo[1])
+
+        self.filter_photos = [
+            scaled_original_photo,
+            self.filter_photo_preview(photo=scaled_original_photo, idx=1),
+            self.filter_photo_preview(photo=scaled_original_photo, idx=2),
+            self.filter_photo_preview(photo=scaled_original_photo, idx=3)
+        ]
+
+    def draw_filtered_photos(self):
+
+        self.photobooth.screen.blit(self.filter_photos[0][0], (0, 0))
+
+        self.photobooth.screen.blit(self.filter_photos[1][0], (self._picture_size[0], 0))
+
+        self.photobooth.screen.blit(self.filter_photos[2][0], (0, self._picture_size[1]))
+
+        self.photobooth.screen.blit(self.filter_photos[3][0], (self._picture_size[0], self._picture_size[1]))
+
+
+    def update_callback(self):
+
+        self.draw_filtered_photos()
+
+        draw_text_box(screen=self.photobooth.screen,text=_("Select photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+
+        draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")], pos=(None,self.photobooth.app_resolution[1]-60))
+
+
+        for i in range(len(self.filter_photos)):
+            if self.photobooth.io_manager.button_idx_pressed(idx=i):
+                # create final file name
+                path, ext = os.path.splitext(app.last_photo[1])
+
+                filter_file = path + '_filtered' + ext
+                # redo filtering on full image resolution
+                self.photobooth.last_photo = self.filter_photo_fullsize(photo=app.last_photo,idx=i,dest=filter_file)
+                break
+
+    def reset(self):
+        super(StateFilter, self).reset()
+        self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.ON)
+
+        self._picture_size = (self.photobooth.screen.get_size()[0] // 2, self.photobooth.screen.get_size()[1] // 2)
+
+        if app.last_photo:
+            self.create_filtered_photos()
+
 
 
 class StateAdmin(PhotoBoothState):
@@ -501,13 +624,17 @@ if __name__ == '__main__':
     # create app
     app = PhotoBooth(fullscreen=START_FULLSCREEN)
 
+    state_printing = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
+
     # Create all states
     #state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME) # enable this state to use without printing
-    state_show_photo = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
+    #state_show_photo = state_printing
+
+    state_filter_photo = StateFilter(photobooth=app, next_state=state_printing, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
 
     state_admin = StateAdmin(photobooth=app, next_state=None)
 
-    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
+    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_filter_photo, counter=PHOTO_COUNTDOWN)
 
     timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
 
@@ -515,7 +642,7 @@ if __name__ == '__main__':
                                                                   admin_state=state_admin, timeout_state=timeout_slide_show,
                                                                   counter=PHOTO_TIMEOUT)
 
-    state_show_photo.next_state = state_waiting_for_photo_trigger
+    state_printing.next_state = state_waiting_for_photo_trigger
     timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger, admin_state=state_admin)

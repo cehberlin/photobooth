@@ -61,7 +61,7 @@ class PiggyphotoCamera(AbstractCamera):
     Class wrapping camera access through piggyphoto gphoto2 library
     """
 
-    def __init__(self,  photo_directory, **kwargs):
+    def __init__(self,  photo_directory, tmp_directory, **kwargs):
         """
         :param photobooth: app instance
         :param kwargs:
@@ -69,7 +69,8 @@ class PiggyphotoCamera(AbstractCamera):
         self.cam = None
         self.cam = piggyphoto.camera()
         self._photo_directory = photo_directory
-        #self.cam.leave_locked() # not sure what would be the effect
+        self._tmp_directory = tmp_directory
+        #self.cam.leave_locked() # TODO not sure what would be the effect
 
     def set_memory_capture(self):
         # set capturetarget to memory card
@@ -83,8 +84,9 @@ class PiggyphotoCamera(AbstractCamera):
         self.cam.config = cam_config
 
     def get_preview(self):
-        self.cam.capture_preview('preview.jpg')
-        picture = pygame.image.load("preview.jpg")
+        file = self._tmp_directory +'/preview.jpg'
+        self.cam.capture_preview()
+        picture = pygame.image.load(file)
         return picture
 
     def take_photo(self):
@@ -104,12 +106,17 @@ class DummyCamera(AbstractCamera):
     Dummy camera class that just provides some example images for testing
     """
 
-    def __init__(self, photo_directory, **kwargs):
+    def __init__(self, photo_directory, tmp_directory, **kwargs):
         # Load some dummy images
         self._photo_directory = photo_directory
-        self._previews = [pygame.image.load("dummy_preview00.jpg"), pygame.image.load("dummy_preview01.jpg")]
         self._preview_cnt = 0
-        self._photo = pygame.image.load("dummy_snap.jpg")
+        if tmp_directory:
+            self._tmp_directory = tmp_directory + '/'
+        else:
+            self._tmp_directory = ""
+
+        self._previews = [pygame.image.load(self._tmp_directory + "dummy_preview00.jpg"), pygame.image.load(self._tmp_directory + "dummy_preview01.jpg")]
+        self._photo = pygame.image.load(self._tmp_directory + "dummy_snap.jpg")
 
     def set_memory_capture(self):
         pass
@@ -123,7 +130,7 @@ class DummyCamera(AbstractCamera):
 
     def take_photo(self):
         photo_file = self._photo_directory + "/dummy_snap_" +str(datetime.now()).replace(':','-')+ ".jpg"
-        copy("dummy_snap.jpg", photo_file)
+        copy(self._tmp_directory + "dummy_snap.jpg", photo_file)
         return self._photo, photo_file
 
     def __del__(self):
