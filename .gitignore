@@ -96,3 +96,4 @@ ENV/
 #Project specific
 tmp/
 images/
+test_misc/
