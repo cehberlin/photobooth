@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2017-05-01 18:41+0200\n"
-"PO-Revision-Date: 2017-05-01 18:42+0200\n"
+"POT-Creation-Date: 2017-05-27 14:26+0200\n"
+"PO-Revision-Date: 2017-05-27 14:27+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -17,103 +17,123 @@ msgstr ""
 "X-Generator: Poedit 1.8.11\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: photobooth.py:200
+#: photobooth.py:211
 msgid "Camera not connected: "
 msgstr "Kamera nicht verbunden:"
 
-#: photobooth.py:222
+#: photobooth.py:234
 msgid "Slideshow, press any button to continue"
 msgstr "Diashow, Beliebige Taste drücken zum Fortsetzen"
 
-#: photobooth.py:270
+#: photobooth.py:282
 msgid "Photo"
 msgstr "Foto"
 
-#: photobooth.py:326
-msgid "Last Photo:"
-msgstr "Letztes Foto:"
-
-#: photobooth.py:348
-msgid "Print photo?"
-msgstr "Foto drucken?"
-
-#: photobooth.py:355
-msgid "Print"
-msgstr "Drucken"
-
-#: photobooth.py:355 photobooth.py:427
+#: photobooth.py:312 photobooth.py:388 photobooth.py:569
 msgid "Cancel"
 msgstr "Abbruch"
 
-#: photobooth.py:358
+#: photobooth.py:346
+msgid "Last Photo:"
+msgstr "Letztes Foto:"
+
+#: photobooth.py:374
 msgid "Print failure:"
 msgstr "Druckfehler:"
 
-#: photobooth.py:379
+#: photobooth.py:378
+msgid "Please wait, printing ..."
+msgstr "Bitte warten, Druckvorgang läuft ..."
+
+#: photobooth.py:387
+msgid "Print photo?"
+msgstr "Foto drucken?"
+
+#: photobooth.py:388
+msgid "Print"
+msgstr "Drucken"
+
+#: photobooth.py:485 photobooth.py:499
+msgid "Please wait, processing ..."
+msgstr "Bitte warten, Verarbeitung läuft ..."
+
+#: photobooth.py:491
+msgid "Select photo?"
+msgstr "Bitte Foto auswählen"
+
+#: photobooth.py:493
+msgid "(1)"
+msgstr "(1)"
+
+#: photobooth.py:493
+msgid "(4)"
+msgstr "(4)"
+
+#: photobooth.py:521
 msgid "Return"
 msgstr "Zurück"
 
-#: photobooth.py:380
+#: photobooth.py:522
 msgid "Close photobooth"
 msgstr "Anwendung beenden"
 
-#: photobooth.py:381
+#: photobooth.py:523
 msgid "Shutdown all"
 msgstr "Alles herunterfahren"
 
-#: photobooth.py:382
+#: photobooth.py:524
 msgid "Start printer"
 msgstr "Drucker starten"
 
-#: photobooth.py:383
+#: photobooth.py:525
 msgid "Stop printer"
 msgstr "Drucker beenden"
 
-#: photobooth.py:408
+#: photobooth.py:550
 msgid "Administration"
 msgstr "Administration"
 
-#: photobooth.py:411
+#: photobooth.py:553
 msgid "Free space: "
 msgstr "Freier Speicherplatz: "
 
-#: photobooth.py:412
+#: photobooth.py:554
 msgid "IP: "
 msgstr "IP:"
 
-#: photobooth.py:413
+#: photobooth.py:555
 msgid "Printer available: "
 msgstr "Drucker erreichbar:"
 
-#: photobooth.py:414
+#: photobooth.py:556
 msgid "Taken photos: "
 msgstr "Anzahl Fotos:"
 
-#: photobooth.py:416
+#: photobooth.py:558
 msgid "Select option:"
 msgstr "Option auswählen:"
 
-#: photobooth.py:421
+#: photobooth.py:563
 msgid "Back"
 msgstr "Zurück"
 
-#: photobooth.py:421
+#: photobooth.py:563
 msgid "Next"
 msgstr ">>"
 
-#: photobooth.py:421
+#: photobooth.py:563
 msgid "Prev"
 msgstr "<<"
 
-#: photobooth.py:421
+#: photobooth.py:563
 msgid "Select"
 msgstr "OK"
 
-#: photobooth.py:427
+#: photobooth.py:569
 msgid "Accept"
 msgstr "OK"
 
-#: photobooth.py:530
+#: photobooth.py:676
 msgid "Error"
 msgstr "Fehler"
 
