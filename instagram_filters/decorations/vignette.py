@@ -6,7 +6,8 @@ class Vignette(Filter):
 		crop_x = math.floor(self.image().size[0] * crop_factor)
 		crop_y = math.floor(self.image().size[1] * crop_factor)
 		 
-		self.execute("convert \( {filename} \) \( -size {crop_x}x{crop_y} radial-gradient:{color_1}-{color_2} -gravity center -crop {width}x{height}+0+0 +repage \) -compose multiply -flatten {filename}",
+		self.execute("convert \( {filename}  \) \( -size {crop_x}x{crop_y} radial-gradient:{color_1}-{color_2} -gravity center -crop {width}x{height}+0+0 +repage \) -compose multiply -flatten {filename}",
+			filename=r'"%s"' % self.filename,
 			crop_x = crop_x,
 			crop_y = crop_y,
 			color_1 = color_1,

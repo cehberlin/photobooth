@@ -36,6 +36,7 @@ class Filter:
 			negate = ''
 
 		self.execute("convert {filename} \( -clone 0 -fill '{color}' -colorize 100% \) \( -clone 0 -colorspace gray {negate} \) -compose blend -define compose:args={arg0},{arg1} -composite {filename}",
+			filename = r'"%s"' % self.filename,
 			color = color,
 			negate = negate,
 			arg0 = arg0,
