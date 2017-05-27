@@ -92,6 +92,17 @@ def draw_circle(screen, pos, size, color, color_border=None, size_border = 1):
         pygame.draw.circle(screen, color_border, pos, size, size_border)
 
 def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10):
+    """
+    Draw a text box
+    :param screen: pygame screen
+    :param text: text to show
+    :param pos: position tuple (x,y) use (None,y) for horizontal centering and (x, None) for vertical centering
+    :param size: font size
+    :param text_color: font color
+    :param box_color: box color
+    :param border_color: box border color
+    :param margin: margin around text
+    """
 
     txt_img = get_text_img(text, size, text_color)
 
