@@ -45,6 +45,12 @@ IO_MANAGER_CLASS = 'pygame'
 #options 'dummy', 'piggyphoto'
 CAMERA_CLASS = 'dummy'
 
+
+def draw_wait_box(screen, text):
+    draw_text_box(screen=screen, text=text, pos=(None, None),
+                  size=INFO_FONT_SIZE)
+    pygame.display.update()
+
 class PhotoBoothState(object):
 
     def __init__(self, photobooth, next_state, counter_callback=None, counter_callback_args=None, counter=-1):
@@ -359,20 +365,17 @@ class StatePrinting(PhotoBoothState):
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
 
-        draw_text_box(screen=self.photobooth.screen,text=_("Print photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
-
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.OFF)
         self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.OFF)
 
-        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None,self.photobooth.app_resolution[1]-60))
-
         if self._error_txt:
-            show_text_left(self.photobooth.screen, _("Print failure:"), (20, 360), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
-            show_text_left(self.photobooth.screen, self._error_txt, (20, 390), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_left(self.photobooth.screen, _("Print failure:"), (20, 240), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_left(self.photobooth.screen, self._error_txt, (20, 270), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
+            draw_wait_box(screen=self.photobooth.screen, text=_("Please wait, printing ..."))
             if self.print_photo(app.last_photo[1]):
                 self.switch_next()
                 self._error_txt = None
@@ -380,6 +383,9 @@ class StatePrinting(PhotoBoothState):
                 self.reset()  # reset timeout counter
         elif self.photobooth.io_manager.cancel_button_pressed():
             self.switch_next()
+
+        draw_text_box(screen=self.photobooth.screen, text=_("Print photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None, self.photobooth.app_resolution[1] - 60))
 
 
 class StateFilter(PhotoBoothState):
@@ -439,7 +445,7 @@ class StateFilter(PhotoBoothState):
         if idx == 1:
             fil = Nashville(filter_file)
         if idx == 2:
-            fil = Gotham(filter_file)
+            fil = Kelvin(filter_file)
         if idx == 3:
             fil = BlackAndWhite(filter_file)
         fil.apply()
@@ -470,23 +476,28 @@ class StateFilter(PhotoBoothState):
 
         self.draw_filtered_photos()
 
-        draw_text_box(screen=self.photobooth.screen,text=_("Select photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
-
-        draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")], pos=(None,self.photobooth.app_resolution[1]-60))
-
-
         for i in range(len(self.filter_photos)):
             if self.photobooth.io_manager.button_idx_pressed(idx=i):
                 # create final file name
                 path, ext = os.path.splitext(app.last_photo[1])
 
                 filter_file = path + '_filtered' + ext
+                draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
                 # redo filtering on full image resolution
                 self.photobooth.last_photo = self.filter_photo_fullsize(photo=app.last_photo,idx=i,dest=filter_file)
+                self.switch_next()
                 break
+
+        draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+
+        draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")],
+                        pos=(None, self.photobooth.app_resolution[1] - 60))
 
     def reset(self):
         super(StateFilter, self).reset()
+
+        draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
+
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
