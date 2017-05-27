@@ -450,7 +450,8 @@ class StateFilter(PhotoBoothState):
             fil = Toaster(filter_file)
         if idx == 3:
             fil = BlackAndWhite(filter_file)
-        fil.apply()
+        if fil:
+            fil.apply()
 
     def create_filtered_photos(self):
 
@@ -492,8 +493,7 @@ class StateFilter(PhotoBoothState):
 
         draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
-        draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")],
-                        pos=(None, self.photobooth.app_resolution[1] - 60))
+        draw_button_rect(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")], pos=(None, None))
 
     def reset(self):
         super(StateFilter, self).reset()
@@ -611,6 +611,7 @@ class StateAdmin(PhotoBoothState):
             self._current_option_idx = self._current_option_idx % (len(self._options))
 
     def close_app(self):
+        self.photobooth.cam.set_idle()
         pygame.quit()
 
     def start_printer(self):
@@ -685,3 +686,7 @@ if __name__ == '__main__':
             print(e)
             show_text_mid(app.screen, _("Error"), get_text_mid_position(app.app_resolution))
         pygame.display.update()
+
+    #disable camera before closing
+    if app and app.cam:
+        app.cam.set_idle()

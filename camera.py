@@ -79,6 +79,9 @@ class PiggyphotoCamera(AbstractCamera):
         self.cam.config = cam_config
 
     def set_idle(self):
+        self.disable_liveview()
+
+    def disable_liveview(self):
         cam_config = self.cam.config
         cam_config['main']['actions']['viewfinder'].value = 0
         self.cam.config = cam_config
@@ -94,12 +97,15 @@ class PiggyphotoCamera(AbstractCamera):
         Trigger photo capture
         :return:  tuple of pygame image and path to file
         """
+        #disable liveview to use better internal autofocus of camera
+        self.disable_liveview()
         file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
         self.cam.capture_image(destpath=file)
         return pygame.image.load(file), file
 
     def __del__(self):
         if self.cam:
+            self.set_idle()
             self.cam.exit()
 
 camera_factory.register_algorithm("piggyphoto", PiggyphotoCamera)

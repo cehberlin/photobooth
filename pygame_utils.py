@@ -158,11 +158,11 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
 
     bar_width = 6 * radius + 4 * margin
 
-    # vertical center alignment
+    # horizontal center alignment
     if not pos_x:
         pos_x = get_text_mid_position(screen.get_size())[0] - bar_width//2
 
-    # horizontal center alignment
+    # vertical center alignment
     if not pos_y:
         pos_y = get_text_mid_position(screen.get_size())[1] - radius // 2
 
@@ -174,6 +174,39 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
         draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_BLUE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
+    if text[2]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+    pos_x += margin + radius * 2
+    if text[3]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[3], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+
+def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=30):
+    pos_x = pos[0]
+    pos_y = pos[1]
+
+    rect_width = 2 * radius + 1 * margin
+
+    mid_position = get_text_mid_position(screen.get_size())
+
+    # horizontal center alignment
+    if not pos_x:
+        pos_x = mid_position[0] - rect_width // 2
+
+    # vertical center alignment
+    if not pos_y:
+        pos_y = mid_position[1] - rect_width // 2
+
+    if text[0]:
+        draw_circle(screen=screen, pos=(pos_x,pos_y), size=radius, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen,text=text[0],mid_pos=(pos_x,pos_y),size=font_size,color=COLOR_WHITE)
+    pos_x+= margin + radius * 2
+    if text[1]:
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_BLUE, color_border=COLOR_WHITE, size_border=1)
+        show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+    pos_x -= margin + radius * 2
+    pos_y += margin + radius * 2
     if text[2]:
         draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
