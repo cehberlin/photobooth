@@ -25,6 +25,8 @@ COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
 INFO_SMALL_FONT_SIZE = 24
 
+INFO_TEXT_Y_POS = 100
+
 # Core configurations
 
 PHOTO_TIMEOUT = 30
@@ -231,7 +233,7 @@ class StateShowSlideShow(PhotoBoothState):
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, 30), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
     def _next_photo(self):
         if len(self._photo_set) > 0:
@@ -343,7 +345,7 @@ class StateShowPhoto(PhotoBoothState):
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        show_text_left(self.photobooth.screen, _("Last Photo:"), (20, 30), INFO_FONT_SIZE)
+        show_text_left(self.photobooth.screen, _("Last Photo:"), (20, INFO_TEXT_Y_POS), INFO_FONT_SIZE)
 
 class StatePrinting(PhotoBoothState):
     """
@@ -384,7 +386,7 @@ class StatePrinting(PhotoBoothState):
         elif self.photobooth.io_manager.cancel_button_pressed():
             self.switch_next()
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Print photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Print photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None, self.photobooth.app_resolution[1] - 60))
 
 
@@ -445,7 +447,7 @@ class StateFilter(PhotoBoothState):
         if idx == 1:
             fil = Nashville(filter_file)
         if idx == 2:
-            fil = Kelvin(filter_file)
+            fil = Toaster(filter_file)
         if idx == 3:
             fil = BlackAndWhite(filter_file)
         fil.apply()
@@ -488,7 +490,7 @@ class StateFilter(PhotoBoothState):
                 self.switch_next()
                 break
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, 30), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
         draw_button_bar(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")],
                         pos=(None, self.photobooth.app_resolution[1] - 60))
@@ -546,30 +548,38 @@ class StateAdmin(PhotoBoothState):
         # Background
         draw_rect(self.photobooth.screen,(10,10),(self.photobooth.app_resolution[0]-20, self.photobooth.app_resolution[1]-20))
 
+        x_pos = 20
+        y_pos= INFO_TEXT_Y_POS
+
         # Caption
-        show_text_left(self.photobooth.screen, _("Administration"), (20, 30), INFO_FONT_SIZE)
-
+        show_text_left(self.photobooth.screen, _("Administration"), (x_pos, y_pos), INFO_FONT_SIZE)
+        y_pos+=30
         #Infos
-        show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (20, 60), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
-        show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (20, 90), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
-        show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (20, 120), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
-        show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (20, 150), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
+        show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
+        show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
+        show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
 
-        show_text_left(self.photobooth.screen, _("Select option:"), (20, 190), INFO_FONT_SIZE, color=COLOR_WHITE                    )
+        show_text_left(self.photobooth.screen, _("Select option:"), (x_pos, y_pos), INFO_FONT_SIZE, color=COLOR_WHITE)
+        y_pos += 30
         # Current selected option
-        show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (20, 220), size=INFO_FONT_SIZE, color=COLOR_GREEN)
+        show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (x_pos, y_pos), size=INFO_FONT_SIZE, color=COLOR_GREEN)
 
         if not self._request_confirmation:
             draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
-
+        y_pos += 60
         #Confirmation request
         if self._request_confirmation:
             show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0],
-                           (20, 280), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+                           (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")], pos=(None,self.photobooth.app_resolution[1]-60))
 
         #Error
-        show_text_left(self.photobooth.screen, self._error_text, (20, 280),
+        show_text_left(self.photobooth.screen, self._error_text, (x_pos, y_pos),
                        size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         #Input handling
