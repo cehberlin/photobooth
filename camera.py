@@ -102,7 +102,7 @@ class PiggyphotoCamera(AbstractCamera):
 
     def trigger_autofocus(self):
         cam_config = self.cam.config
-        cam_config['main']['other']['d108'].value = 0
+        cam_config['main']['capturesettings']['liveviewaffocus'].value = 'Full-time-servo AF'
         self.cam.config = cam_config
 
     def take_photo(self):
