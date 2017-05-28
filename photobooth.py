@@ -310,9 +310,6 @@ class StatePhotoTrigger(PhotoBoothState):
             show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
             self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-            #try initial focus with liveview before taking the picture
-            if self.counter == 3:
-                self.photobooth.cam.enable_live_autofocus()
             if self.counter == 1:
                 self.photobooth.cam.disable_live_autofocus()
 
@@ -326,6 +323,10 @@ class StatePhotoTrigger(PhotoBoothState):
             print("Photo trigger failed:" + str(e))
             if self.failure_state:
                 self.photobooth.state = self.failure_state
+
+    def reset(self):
+        super(StatePhotoTrigger, self).reset()
+        self.photobooth.cam.enable_live_autofocus()
         
     def _take_photo(self):
         #first update to latest preview
