@@ -310,6 +310,10 @@ class StatePhotoTrigger(PhotoBoothState):
             show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
             self.photobooth.io_manager.show_led_coutdown(self.counter)
 
+            #try initial focus with liveview before taking the picture
+            if self.counter == 3:
+                self.photobooth.cam.trigger_autofocus()
+
             #cancel photo if necessary
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
                             pos=(None, self.photobooth.app_resolution[1] - 60))

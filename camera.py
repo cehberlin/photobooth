@@ -44,6 +44,13 @@ class AbstractCamera(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def trigger_autofocus(self):
+        """
+        Trigger camera autofocus
+        """
+        raise NotImplementedError
+
 # Create singleton factory object
 camera_factory = GenericClassFactory(AbstractCamera)
 
@@ -58,7 +65,8 @@ def get_camera_factory():
 
 class PiggyphotoCamera(AbstractCamera):
     """
-    Class wrapping camera access through piggyphoto gphoto2 library
+    Class wrapping camera access through piggyphoto gphoto2 library for Nikon DSLR, you probably have to adjust it
+    for other camera brands
     """
 
     def __init__(self,  photo_directory, tmp_directory, **kwargs):
@@ -91,6 +99,11 @@ class PiggyphotoCamera(AbstractCamera):
         self.cam.capture_preview(destpath=file)
         picture = pygame.image.load(file)
         return picture
+
+    def trigger_autofocus(self):
+        cam_config = self.cam.config
+        cam_config['main']['other']['d108'].value = 0
+        self.cam.config = cam_config
 
     def take_photo(self):
         """
@@ -132,6 +145,9 @@ class DummyCamera(AbstractCamera):
         pass
 
     def set_idle(self):
+        pass
+
+    def trigger_autofocus(self):
         pass
 
     def get_preview(self):
