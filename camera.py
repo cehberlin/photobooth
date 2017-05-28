@@ -45,11 +45,19 @@ class AbstractCamera(object):
         raise NotImplementedError
 
     @abstractmethod
-    def trigger_autofocus(self):
+    def enable_live_autofocus(self):
         """
-        Trigger camera autofocus
+        enable camera autofocus in preview mode
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def disable_live_autofocus(self):
+        """
+        disable camera autofocus in preview mode
+        """
+        raise NotImplementedError
+
 
 # Create singleton factory object
 camera_factory = GenericClassFactory(AbstractCamera)
@@ -100,9 +108,14 @@ class PiggyphotoCamera(AbstractCamera):
         picture = pygame.image.load(file)
         return picture
 
-    def trigger_autofocus(self):
+    def enable_live_autofocus(self):
         cam_config = self.cam.config
         cam_config['main']['capturesettings']['liveviewaffocus'].value = 'Full-time-servo AF'
+        self.cam.config = cam_config
+
+    def disable_live_autofocus(self):
+        cam_config = self.cam.config
+        cam_config['main']['capturesettings']['liveviewaffocus'].value = 'Single-servo AF'
         self.cam.config = cam_config
 
     def take_photo(self):
@@ -147,7 +160,10 @@ class DummyCamera(AbstractCamera):
     def set_idle(self):
         pass
 
-    def trigger_autofocus(self):
+    def enable_live_autofocus(self):
+        pass
+
+    def disable_live_autofocus(self):
         pass
 
     def get_preview(self):

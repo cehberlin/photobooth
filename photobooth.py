@@ -312,7 +312,9 @@ class StatePhotoTrigger(PhotoBoothState):
 
             #try initial focus with liveview before taking the picture
             if self.counter == 3:
-                self.photobooth.cam.trigger_autofocus()
+                self.photobooth.cam.enable_live_autofocus()
+            if self.counter == 1:
+                self.photobooth.cam.disable_live_autofocus()
 
             #cancel photo if necessary
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
