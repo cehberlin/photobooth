@@ -317,6 +317,7 @@ class StatePhotoTrigger(PhotoBoothState):
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
                             pos=(None, self.photobooth.app_resolution[1] - 60))
             if self.photobooth.io_manager.cancel_button_pressed():
+                self.photobooth.cam.disable_live_autofocus()
                 self.switch_last()
 
         except Exception as e:
@@ -326,7 +327,8 @@ class StatePhotoTrigger(PhotoBoothState):
 
     def reset(self):
         super(StatePhotoTrigger, self).reset()
-        self.photobooth.cam.enable_live_autofocus()
+        if self.photobooth.cam:
+            self.photobooth.cam.enable_live_autofocus()
         
     def _take_photo(self):
         #first update to latest preview
