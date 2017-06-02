@@ -418,11 +418,9 @@ class StateFilter(PhotoBoothState):
         :param dest: destination path of photo
         :return: tuple (pygame.image,path) of new photo
         """
-        # Copy photo file
         filter_file = dest
-        shutil.copy(photo[1], filter_file)
 
-        self.apply_photo_filter(filter_file, idx)
+        self.apply_photo_filter(photo[1], idx, dest)
 
         photo_obj = pygame.image.load(filter_file)
 
@@ -439,11 +437,11 @@ class StateFilter(PhotoBoothState):
         """
 
         # Copy photo file
-        photo_obj = copy.copy(photo[0])
+        #photo_obj = copy.copy(photo[0])
 
         filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
 
-        pygame.image.save(photo_obj, filter_file)
+        pygame.image.save(photo[0], filter_file)
 
         self.apply_photo_filter(filter_file, idx)
 
@@ -451,14 +449,14 @@ class StateFilter(PhotoBoothState):
 
         return photo_obj, filter_file
 
-    def apply_photo_filter(self, filter_file, idx):
+    def apply_photo_filter(self, filter_file, idx, output_file=None):
         fil = None
         if idx == 1:
-            fil = Nashville(filter_file)
+            fil = Nashville(filename=filter_file,output_filename=output_file)
         if idx == 2:
-            fil = Toaster(filter_file)
+            fil = Toaster(filename=filter_file,output_filename=output_file)
         if idx == 3:
-            fil = BlackAndWhite(filter_file)
+            fil = BlackAndWhite(filename=filter_file,output_filename=output_file)
         if fil:
             fil.apply()
 
