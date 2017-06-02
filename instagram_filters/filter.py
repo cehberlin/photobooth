@@ -18,7 +18,7 @@ class Filter(imagemagick.Convert):
         else:
             negate = ''
 
-        self.add_process_step(process_step_cmd="-clone 0 -fill '{color}' -colorize 100%", color=color)
-        self.add_process_step(process_step_cmd="-clone 0 -colorspace gray {negate}", negate = negate)
+        self.add_process_step(process_step_cmd="\( -clone 0 -fill '{color}' -colorize 100% \)", color=color)
+        self.add_process_step(process_step_cmd="\( -clone 0 -colorspace gray {negate} \)", negate = negate)
         self.add_process_step(process_step_cmd="-compose blend -define compose:args={arg0},{arg1}", arg0 = arg0, arg1 = arg1)
         self.add_process_step(process_step_cmd="-composite")

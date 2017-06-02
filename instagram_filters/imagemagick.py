@@ -42,7 +42,7 @@ class Convert(object):
         for cmd, params in self._process_steps:
             format = dict(self.default_params.items() + params.items())
             step = cmd.format(**format)
-            steps += " \( {} \) ".format(step)
+            steps += " {} ".format(step)
 
         command = "convert {input_filename} {steps} {output_filename}".format(input_filename=r'"%s"' % self.input_file,
                                                                               output_filename=r'"%s"' % self.output_file,
