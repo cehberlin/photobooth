@@ -1,5 +1,6 @@
 import subprocess
 from PIL import Image
+import shlex
 
 class Convert(object):
     """
@@ -43,19 +44,14 @@ class Convert(object):
             step = cmd.format(**format)
             steps += " \( {} \) ".format(step)
 
-        print(steps)
-
         command = "convert {input_filename} {steps} {output_filename}".format(input_filename=r'"%s"' % self.input_file,
                                                                               output_filename=r'"%s"' % self.output_file,
                                                                               steps=steps)
-
-        print(command)
         self.execute_process(command)
 
     def execute_process(self, command):
 
-        error = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-        return error
+        cmd = shlex.split(command)
 
-
-
+        p = subprocess.Popen(cmd,shell=False, stderr=subprocess.STDOUT)
+        p.wait()
