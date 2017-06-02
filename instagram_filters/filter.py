@@ -1,31 +1,14 @@
 # inspired from http://net.tutsplus.com/tutorials/php/create-instagram-filters-with-php/
 
-import subprocess
-from PIL import Image
-import math
+import imagemagick
 
-class Filter:
+class Filter(imagemagick.Convert):
 	
-	def __init__(self, filename):
-		self.filename = filename
-		self.im = False
-		
-	def image(self):
-		if not self.im:
-			self.im = Image.open(self.filename)
-		return self.im
-	
-	def execute(self, command, **kwargs):
-		default = dict(
-			filename=self.filename,
-			width = self.image().size[0],
-			height = self.image().size[1]
-		)
-		format = dict(default.items() + kwargs.items())
-		command = command.format(**format)
-		error = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-		return error
-		
+	def __init__(self, filename, output_filename=None):
+		if not output_filename:
+			output_filename = filename
+		super(Filter, self).__init__(input_file=filename,output_file=output_filename)
+
 	def colortone(self, color, level, type = 0):
 		
 		arg0 = level
@@ -35,10 +18,8 @@ class Filter:
 		else:
 			negate = ''
 
-		self.execute("convert {filename} \( -clone 0 -fill '{color}' -colorize 100% \) \( -clone 0 -colorspace gray {negate} \) -compose blend -define compose:args={arg0},{arg1} -composite {filename}",
-			filename = r'"%s"' % self.filename,
-			color = color,
-			negate = negate,
-			arg0 = arg0,
-			arg1 = arg1
-		)
+		self.add_process_step(process_step_cmd="-clone 0 -fill '{color}' -colorize 100%", color=color)
+		self.add_process_step(process_step_cmd="-clone 0 -colorspace gray {negate}", negate = negate)
+		self.add_process_step(process_step_cmd="-compose blend -define compose:args={arg0},{arg1}", arg0 = arg0, arg1 = arg1)
+		self.add_process_step(process_step_cmd="-composite")
+
