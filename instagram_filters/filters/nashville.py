@@ -1,5 +1,3 @@
-from mock.mock import self
-
 from instagram_filters.filter import Filter
 
 
