@@ -17,8 +17,8 @@ class LedState(object):
 
 class LedType(object):
     RED = 0
-    YELLOW = 1
-    BLUE = 2
+    BLUE = 1
+    YELLOW = 2
     GREEN = 3
 
 class AbstractUserIo(object):
@@ -244,9 +244,9 @@ if found_rpi_module:
             if idx == 0:
                 return self.push_buttons[LedType.RED].was_pressed(reset=True)
             if idx == 1:
-                return self.push_buttons[LedType.YELLOW].was_pressed(reset=True)
-            if idx == 2:
                 return self.push_buttons[LedType.BLUE].was_pressed(reset=True)
+            if idx == 2:
+                return self.push_buttons[LedType.YELLOW].was_pressed(reset=True)
             if idx == 3:
                 return self.push_buttons[LedType.GREEN].was_pressed(reset=True)
 
