@@ -548,7 +548,7 @@ class StateAdmin(PhotoBoothState):
         super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.enable_input)
 
         self.state_showphoto = state_showphoto
-        self.state_filter = state_printing
+        self.state_filter = state_filter
         self.state_printing = state_printing
 
         # we wait some seconds to handle button input to avoid missclicks due required button combo for enabling this mode
