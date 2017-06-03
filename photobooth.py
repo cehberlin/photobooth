@@ -31,7 +31,7 @@ INFO_TEXT_Y_POS = 100
 
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
-PHOTO_SHOW_TIME = 5
+PHOTO_SHOW_TIME = 3
 SLIDE_SHOW_TIMEOUT = 5
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
@@ -427,13 +427,15 @@ class StateFilter(PhotoBoothState):
         """
         filter_file = dest
 
-        self.apply_photo_filter(photo[1], idx, dest)
+        if self.apply_photo_filter(photo[1], idx, dest):
 
-        photo_obj = pygame.image.load(filter_file)
+            photo_obj = pygame.image.load(filter_file)
 
-        photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
+            photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
 
-        return photo_obj, filter_file
+            return photo_obj, filter_file
+        else:
+            return photo
 
     def filter_photo_preview(self, photo, idx):
         """
@@ -443,31 +445,45 @@ class StateFilter(PhotoBoothState):
         :return: tuple (pygame.image,path) of new photo
         """
 
-        # Copy photo file
-        #photo_obj = copy.copy(photo[0])
-
         filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
 
         pygame.image.save(photo[0], filter_file)
 
-        self.apply_photo_filter(filter_file, idx)
+        if self.apply_photo_filter(filter_file, idx):
 
-        photo_obj = pygame.image.load(filter_file)
+            photo_obj = pygame.image.load(filter_file)
 
-        return photo_obj, filter_file
+            return photo_obj, filter_file
 
-    def apply_photo_filter(self, filter_file, idx, output_file=None):
+        else:
+            return photo
+
+    def apply_photo_filter(self, input_file, idx, output_file=None):
+        """
+        apply a photo filter
+        :param input_file: the photo file to filter
+        :param idx: the idx of the filter to use
+        :param output_file: the created file
+        :return: True if a filter was applied
+        """
+
         fil = None
         if idx == 1:
-            fil = Nashville(filename=filter_file,output_filename=output_file)
+            fil = Nashville(filename=input_file, output_filename=output_file)
         if idx == 2:
-            fil = Toaster(filename=filter_file,output_filename=output_file)
+            fil = Toaster(filename=input_file, output_filename=output_file)
         if idx == 3:
-            fil = BlackAndWhite(filename=filter_file,output_filename=output_file)
+            fil = BlackAndWhite(filename=input_file, output_filename=output_file)
         if fil:
             fil.apply()
+            return True
+        else:
+            return False
 
-    def create_filtered_photos(self):
+    def create_filtered_photo_collection(self):
+        """
+        Create small thumbnail preview filtered photos
+        """
 
         scaled_original_photo = (pygame.transform.scale(app.last_photo[0], self._picture_size), app.last_photo[1])
 
@@ -479,15 +495,14 @@ class StateFilter(PhotoBoothState):
         ]
 
     def draw_filtered_photos(self):
+        """
+        draw filter previews to screen
+        """
 
         self.photobooth.screen.blit(self.filter_photos[0][0], (0, 0))
-
         self.photobooth.screen.blit(self.filter_photos[1][0], (self._picture_size[0], 0))
-
         self.photobooth.screen.blit(self.filter_photos[2][0], (0, self._picture_size[1]))
-
         self.photobooth.screen.blit(self.filter_photos[3][0], (self._picture_size[0], self._picture_size[1]))
-
 
     def update_callback(self):
 
@@ -522,8 +537,7 @@ class StateFilter(PhotoBoothState):
         self._picture_size = (self.photobooth.screen.get_size()[0] // 2, self.photobooth.screen.get_size()[1] // 2)
 
         if app.last_photo:
-            self.create_filtered_photos()
-
+            self.create_filtered_photo_collection()
 
 
 class StateAdmin(PhotoBoothState):
@@ -551,22 +565,36 @@ class StateAdmin(PhotoBoothState):
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer)
         ]
+
     def enable_input(self):
         self.input_handling = True
 
     def toggle_state_showphoto(self):
+        """
+        Enable/Disable show_photo state
+        """
         if self.state_showphoto:
             self.state_showphoto.enabled = not self.state_showphoto.enabled
 
     def toggle_state_filter(self):
+        """
+        Enable/Disable filter state
+        :return:
+        """
         if self.state_filter:
             self.state_showfilter.enabled = not self.state_showfilter.enabled
 
     def toggle_fullscreen(self):
+        """
+        Toggle app fullscreen mode
+        """
         self.photobooth.fullscreen = not self.photobooth.fullscreen
         self.photobooth.set_fullscreen(self.photobooth.fullscreen)
 
     def toggle_state_printing(self):
+        """
+        Enable/Disable printing state
+        """
         if self.state_printing:
             self.state_printing.enabled = not self.state_printing.enabled
 
@@ -742,7 +770,7 @@ if __name__ == '__main__':
     state_admin.enabled = True
     state_timeout_slide_show.enabled = True
     state_printing.enabled = True
-    state_show_photo.enabled = False
+    state_show_photo.enabled = True
     state_filter_photo.enabled = True
     state_printing.enabled = True
 
