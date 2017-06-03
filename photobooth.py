@@ -530,12 +530,15 @@ class StateAdmin(PhotoBoothState):
     """
     Administration info and command option state
     """
-    def __init__(self, photobooth, next_state, counter=-1, state_showphoto=None, state_filter=None, state_printing=None):
-        super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
+    def __init__(self, photobooth, next_state, counter=2, state_showphoto=None, state_filter=None, state_printing=None):
+        super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.enable_input)
 
         self.state_showphoto = state_showphoto
         self.state_filter = state_printing
         self.state_printing = state_printing
+
+        # we wait some seconds to handle button input to avoid missclicks due required button combo for enabling this mode
+        self.input_handling = False
 
         self._options = [
             (_("Return"), self.switch_next),
@@ -548,6 +551,8 @@ class StateAdmin(PhotoBoothState):
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer)
         ]
+    def enable_input(self):
+        self.input_handling = True
 
     def toggle_state_showphoto(self):
         if self.state_showphoto:
@@ -636,6 +641,9 @@ class StateAdmin(PhotoBoothState):
         #Error
         show_text_left(self.photobooth.screen, self._error_text, (x_pos, y_pos),
                        size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+
+        if(not self.input_handling):
+            return
 
         #Input handling
         if self._option_confirmed:
