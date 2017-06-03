@@ -28,7 +28,7 @@ class Convert(object):
             self._image = Image.open(self.input_file)
         return self._image
 
-    def add_process_step(self, process_step_cmd, **kwargs):
+    def add_filter_step(self, process_step_cmd, **kwargs):
         self._process_steps.append( (process_step_cmd,kwargs))
 
     def clear_process_steps(self):

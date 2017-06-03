@@ -1,9 +1,11 @@
-from instagram_filters.filter import Filter
+from decoration import Decoration
 
-class Border(Filter):
-	
-	def border(self, color = 'black', width = 20):
-		self.execute("convert {filename} -bordercolor {color} -border {bwidth}x{bwidth} {filename}",
-			color = color,
-			bwidth = width
-		)
+
+class Border(Decoration):
+
+    def border(self, color = 'black', width = 20):
+        self._filter.add_filter_step(
+            process_step_cmd="-bordercolor {color} -border {bwidth}x{bwidth}",
+            color = color,
+            bwidth = width
+        )
