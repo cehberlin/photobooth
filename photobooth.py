@@ -170,6 +170,13 @@ class PhotoBooth(object):
         #order is important here
         self.io_manager.update()
 
+    def close(self):
+        if self.cam:
+            self.cam.set_idle()
+        if self.io_manager:
+            self.io_manager.set_all_led(LedState.OFF)
+        pygame.quit()
+
     @property
     def last_photo(self):
         return self._last_photo_resized
@@ -560,7 +567,7 @@ class StateAdmin(PhotoBoothState):
             (_("Enable/Disable state ShowPhoto"), self.toggle_state_showphoto),
             (_("Enable/Disable state Filter"), self.toggle_state_filter),
             (_("Enable/Disable state Printing"), self.toggle_state_printing),
-            (_("Close photobooth"), self.close_app),
+            (_("Close photobooth"), self.photobooth.close),
             (_("Shutdown all"), self.shutdown_all),
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer)
@@ -701,11 +708,6 @@ class StateAdmin(PhotoBoothState):
             self._current_option_idx -= 1
             self._current_option_idx = self._current_option_idx % (len(self._options))
 
-    def close_app(self):
-        if self.photobooth.cam:
-            self.photobooth.cam.set_idle()
-        pygame.quit()
-
     def start_printer(self):
         print_utils.start_printer()
 
@@ -790,6 +792,4 @@ if __name__ == '__main__':
             show_text_mid(app.screen, _("Error"), get_text_mid_position(app.app_resolution))
         pygame.display.update()
 
-    #disable camera before closing
-    if app and app.cam:
-        app.cam.set_idle()
+    app.close()
