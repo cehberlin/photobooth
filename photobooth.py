@@ -19,7 +19,7 @@ import gettext
 
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
-START_FULLSCREEN = False
+START_FULLSCREEN = True
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
@@ -32,7 +32,7 @@ INFO_TEXT_Y_POS = 100
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
 PHOTO_SHOW_TIME = 3
-SLIDE_SHOW_TIMEOUT = 5
+SLIDE_SHOW_TIMEOUT = 15
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
 #options 'de', 'en'
@@ -43,9 +43,9 @@ TEMP_DIRECTORY = 'tmp'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'pygame'
+IO_MANAGER_CLASS = 'raspi'
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
+CAMERA_CLASS = 'piggyphoto'
 
 
 def draw_wait_box(screen, text):
@@ -702,7 +702,8 @@ class StateAdmin(PhotoBoothState):
             self._current_option_idx = self._current_option_idx % (len(self._options))
 
     def close_app(self):
-        self.photobooth.cam.set_idle()
+        if self.photobooth.cam:
+            self.photobooth.cam.set_idle()
         pygame.quit()
 
     def start_printer(self):
