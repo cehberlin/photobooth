@@ -63,6 +63,7 @@ class PhotoBoothState(object):
         self.counter_callback = counter_callback
         self.counter_callback_args = counter_callback_args
         self.counter_sleep_time = 1
+        self.enabled = False
         self.reset()
 
     def reset(self):
@@ -184,6 +185,10 @@ class PhotoBooth(object):
 
     @state.setter
     def state(self, value):
+        if not value.enabled:
+            self.state = value.next_state
+            return
+
         self._last_state = self._state
         self._state = value
         self._state.reset()
@@ -356,7 +361,7 @@ class StateShowPhoto(PhotoBoothState):
 
     def update_callback(self):
         show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        show_text_left(self.photobooth.screen, _("Last Photo:"), (20, INFO_TEXT_Y_POS), INFO_FONT_SIZE)
+        #show_text_left(self.photobooth.screen, _("Last Photo:"), (20, INFO_TEXT_Y_POS), INFO_FONT_SIZE)
 
 class StatePrinting(PhotoBoothState):
     """
@@ -525,21 +530,40 @@ class StateAdmin(PhotoBoothState):
     """
     Administration info and command option state
     """
-    def __init__(self, photobooth, next_state, counter=-1):
+    def __init__(self, photobooth, next_state, counter=-1, state_showphoto=None, state_filter=None, state_printing=None):
         super(StateAdmin, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
+
+        self.state_showphoto = state_showphoto
+        self.state_filter = state_printing
+        self.state_printing = state_printing
 
         self._options = [
             (_("Return"), self.switch_next),
             (_("Toggle fullscreen"), self.toggle_fullscreen),
+            (_("Enable/Disable state ShowPhoto"), self.toggle_state_showphoto),
+            (_("Enable/Disable state Filter"), self.toggle_state_filter),
+            (_("Enable/Disable state Printing"), self.toggle_state_printing),
             (_("Close photobooth"), self.close_app),
             (_("Shutdown all"), self.shutdown_all),
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer)
         ]
 
+    def toggle_state_showphoto(self):
+        if self.state_showphoto:
+            self.state_showphoto.enabled = not self.state_showphoto.enabled
+
+    def toggle_state_filter(self):
+        if self.state_filter:
+            self.state_showfilter.enabled = not self.state_showfilter.enabled
+
     def toggle_fullscreen(self):
         self.photobooth.fullscreen = not self.photobooth.fullscreen
         self.photobooth.set_fullscreen(self.photobooth.fullscreen)
+
+    def toggle_state_printing(self):
+        if self.state_printing:
+            self.state_printing.enabled = not self.state_printing.enabled
 
     def get_free_space(self):
         """
@@ -580,6 +604,20 @@ class StateAdmin(PhotoBoothState):
         y_pos += 30
         show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
+        if self.state_showphoto:
+            show_text_left(self.photobooth.screen, _("State 'ShowPhotos' enabled: ") + str(self.state_showphoto.enabled), (x_pos, y_pos),
+                           INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+            y_pos += 30
+        if self.state_filter:
+            show_text_left(self.photobooth.screen, _("State 'Filter' enabled: ") + str(self.state_filter.enabled),
+                           (x_pos, y_pos),
+                           INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+            y_pos += 30
+        if self.state_printing:
+            show_text_left(self.photobooth.screen, _("State 'Printing' enabled: ") + str(self.state_printing.enabled),
+                           (x_pos, y_pos),
+                           INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+            y_pos += 30
 
         show_text_left(self.photobooth.screen, _("Select option:"), (x_pos, y_pos), INFO_FONT_SIZE, color=COLOR_WHITE)
         y_pos += 30
@@ -663,31 +701,42 @@ if __name__ == '__main__':
     # create app
     app = PhotoBooth(fullscreen=START_FULLSCREEN)
 
-    state_printing = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
-
     # Create all states
-    #state_show_photo = StateShowPhoto(photobooth=app, next_state=None, counter=PHOTO_SHOW_TIME) # enable this state to use without printing
-    #state_show_photo = state_printing
+
+    state_printing = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
 
     state_filter_photo = StateFilter(photobooth=app, next_state=state_printing, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
 
-    state_admin = StateAdmin(photobooth=app, next_state=None)
+    state_show_photo = StateShowPhoto(photobooth=app, next_state=state_filter_photo, counter=PHOTO_SHOW_TIME) # enable this state to use without printing
 
-    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_filter_photo, counter=PHOTO_COUNTDOWN)
+    state_admin = StateAdmin(photobooth=app, next_state=None, state_showphoto=state_show_photo, state_filter=state_filter_photo, state_printing=state_printing)
 
-    timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
+    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
+
+    state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
 
     state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo,
-                                                                  admin_state=state_admin, timeout_state=timeout_slide_show,
+                                                                  admin_state=state_admin, timeout_state=state_timeout_slide_show,
                                                                   counter=PHOTO_TIMEOUT)
 
     state_printing.next_state = state_waiting_for_photo_trigger
-    timeout_slide_show.next_state = state_waiting_for_photo_trigger
+    state_timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger, admin_state=state_admin)
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
     state_admin.next_state = state_waiting_for_camera
+
+    #Enable the states we want to use
+    state_waiting_for_camera.enabled = True
+    state_waiting_for_photo_trigger.enabled = True
+    state_trigger_photo.enabled = True
+    state_admin.enabled = True
+    state_timeout_slide_show.enabled = True
+    state_printing.enabled = True
+    state_show_photo.enabled = False
+    state_filter_photo.enabled = True
+    state_printing.enabled = True
 
     #initial app state
     app.state = state_waiting_for_camera
