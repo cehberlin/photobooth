@@ -582,7 +582,7 @@ class StateAdmin(PhotoBoothState):
         :return:
         """
         if self.state_filter:
-            self.state_showfilter.enabled = not self.state_showfilter.enabled
+            self.state_filter.enabled = not self.state_filter.enabled
 
     def toggle_fullscreen(self):
         """
