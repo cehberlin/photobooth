@@ -131,11 +131,7 @@ class PhotoBooth(object):
         info_object = pygame.display.Info()
         self.screen_resolution = [info_object.current_w, info_object.current_h]
 
-        if self.fullscreen:
-            self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
-            pygame.mouse.set_visible(False)
-        else:
-            self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)
+        self.set_fullscreen(self.fullscreen)
 
         self.app_resolution = self.screen.get_size()
 
@@ -149,17 +145,23 @@ class PhotoBooth(object):
         if not os.path.exists(PHOTO_DIRECTORY):
             os.makedirs(PHOTO_DIRECTORY)
 
-    def init_camera(self):
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
-        picture = self.cam.get_preview()
-        
-        if self.fullscreen:
+    def set_fullscreen(self, fullscreen):
+        if fullscreen:
             self.screen = pygame.display.set_mode(self.screen_resolution, pygame.FULLSCREEN)
             pygame.mouse.set_visible(False)
         else:
-            self.screen = pygame.display.set_mode(picture.get_size())
+            if self.cam:
+                picture = self.cam.get_preview()
+                self.screen = pygame.display.set_mode(picture.get_size())
+            else:
+                self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)
 
         self.app_resolution = self.screen.get_size()
+
+    def init_camera(self):
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
+
+        self.set_fullscreen(self.fullscreen)
 
     def update(self):
         self.event_manager.update_events()
@@ -528,11 +530,16 @@ class StateAdmin(PhotoBoothState):
 
         self._options = [
             (_("Return"), self.switch_next),
+            (_("Toggle fullscreen"), self.toggle_fullscreen),
             (_("Close photobooth"), self.close_app),
             (_("Shutdown all"), self.shutdown_all),
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer)
         ]
+
+    def toggle_fullscreen(self):
+        self.photobooth.fullscreen = not self.photobooth.fullscreen
+        self.photobooth.set_fullscreen(self.photobooth.fullscreen)
 
     def get_free_space(self):
         """
@@ -562,6 +569,9 @@ class StateAdmin(PhotoBoothState):
         show_text_left(self.photobooth.screen, _("Administration"), (x_pos, y_pos), INFO_FONT_SIZE)
         y_pos+=30
         #Infos
+        show_text_left(self.photobooth.screen, _("Fullscreen: ") + str(self.photobooth.fullscreen), (x_pos, y_pos),
+                       INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
         show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
         show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
