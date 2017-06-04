@@ -171,6 +171,9 @@ class PhotoBooth(object):
         self.app_resolution = self.screen.get_size()
 
     def init_camera(self):
+        if self.cam:
+            self.cam.close()
+
         self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
         self.cam.disable_live_autofocus()
         self.set_fullscreen(self.fullscreen)
@@ -600,7 +603,7 @@ class StateFilter(PhotoBoothState):
         super(StateFilter, self).reset()
 
         draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
-
+        self._current_filter_idx = 0
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
@@ -832,9 +835,9 @@ if __name__ == '__main__':
 
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
-    state_printing.failure_state = state_waiting_for_camera
-    state_filter_photo.failure_state = state_waiting_for_camera
-    state_show_photo.failure_state = state_waiting_for_camera
+    state_printing.failure_state = state_waiting_for_photo_trigger
+    state_filter_photo.failure_state = state_waiting_for_camera #state_waiting_for_photo_trigger
+    state_show_photo.failure_state = state_waiting_for_photo_trigger
 
     #Enable the states we want to use
     state_waiting_for_camera.enabled = True

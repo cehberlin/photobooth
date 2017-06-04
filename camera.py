@@ -58,6 +58,12 @@ class AbstractCamera(object):
         """
         raise NotImplementedError
 
+    def close(self):
+        """
+        optional closing method
+        """
+        pass
+
 
 # Create singleton factory object
 camera_factory = GenericClassFactory(AbstractCamera)
@@ -129,10 +135,14 @@ class PiggyphotoCamera(AbstractCamera):
         self.cam.capture_image(destpath=file)
         return pygame.image.load(file), file
 
-    def __del__(self):
+    def close(self):
         if self.cam:
             self.set_idle()
             self.cam.exit()
+            self.cam = None
+
+    def __del__(self):
+        self.close()
 
 camera_factory.register_algorithm("piggyphoto", PiggyphotoCamera)
 
