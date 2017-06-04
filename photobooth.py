@@ -553,7 +553,11 @@ class StateFilter(PhotoBoothState):
             if self._current_filter_idx == 3:
                 rect_pos = image_pos
             draw_rect(self.photobooth.screen, rect_pos, self._picture_size, color=None, color_border=COLOR_ORANGE,
-                      size_border=5)
+                      size_border=8)
+            text_margin = 10
+            selected_image_text_pos = (rect_pos[0] + text_margin,rect_pos[1]+ text_margin)
+            draw_text_box(screen=self.photobooth.screen, text=_("Selected"), pos= selected_image_text_pos,
+                          size=INFO_FONT_SIZE, box_color=None, border_color=COLOR_ORANGE, size_border=5, text_color=COLOR_ORANGE)
 
     def draw_selected(self):
         pass
