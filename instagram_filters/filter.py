@@ -1,13 +1,33 @@
 # inspired from http://net.tutsplus.com/tutorials/php/create-instagram-filters-with-php/
 
+from PIL import Image
+
 import imagemagick
 
 class Filter(imagemagick.Convert):
+    """
+    Common image filter class
+    """
 
     def __init__(self, filename, output_filename=None):
         if not output_filename:
             output_filename = filename
         super(Filter, self).__init__(input_file=filename,output_file=output_filename)
+
+        self._image = False
+
+        image = self.image()
+        self.default_params['width'] = image.size[0]
+        self.default_params['height'] = image.size[1]
+
+    def close_image(self):
+        if self.image:
+            self.image.close()
+
+    def image(self):
+        if not self._image:
+            self._image = Image.open(self.input_file)
+        return self._image
 
     def colortone(self, color, level, type = 0):
 

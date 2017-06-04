@@ -1,12 +1,10 @@
-
+#! /usr/bin/env python
 import time
-
 import glob
 import random
 import os
 import socket
-import copy
-import shutil
+import gettext
 
 #Own modules
 from pygame_utils import *
@@ -15,19 +13,16 @@ from camera import get_camera_factory
 from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
 import print_utils
 
-import gettext
-
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
-START_FULLSCREEN = True
+START_FULLSCREEN = False
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
 INFO_SMALL_FONT_SIZE = 24
-
 INFO_TEXT_Y_POS = 100
 
-# Core configurations
+# Timing configurations
 
 PHOTO_TIMEOUT = 30
 PHOTO_COUNTDOWN = 5
@@ -35,17 +30,18 @@ PHOTO_SHOW_TIME = 3
 SLIDE_SHOW_TIMEOUT = 15
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
 
-#options 'de', 'en'
+# Language options 'de', 'en'
 LANGUAGE_ID = 'de'
 
+# Directories
 PHOTO_DIRECTORY = 'images'
 TEMP_DIRECTORY = 'tmp'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'raspi'
+IO_MANAGER_CLASS = 'pygame'
 #options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'piggyphoto'
+CAMERA_CLASS = 'dummy'
 
 
 def draw_wait_box(screen, text):
