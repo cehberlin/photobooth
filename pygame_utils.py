@@ -82,7 +82,8 @@ def get_text_img(text, size, color):
     return font.render(text, True, color)
 
 def draw_rect(screen, pos, size, color=COLOR_GREY, color_border=None, size_border = 1):
-    pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
+    if color:
+        pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
     if color_border:
         pygame.draw.rect(screen, color_border, (pos[0], pos[1], size[0], size[1]),size_border)
 
