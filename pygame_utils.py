@@ -177,7 +177,7 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
         show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[2]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_ORANGE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[3]:
@@ -211,7 +211,7 @@ def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, fon
     pos_x -= margin + radius * 2
     pos_y += margin + radius * 2
     if text[2]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_ORANGE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[3]:
