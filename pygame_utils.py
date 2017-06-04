@@ -69,7 +69,7 @@ class PyGameEventManager(object):
 def get_text_mid_position(resolution):
     return (resolution[0]/2,resolution[1]/2)
 
-def show_cam_picture(screen, picture, fullscreen = True):
+def show_cam_picture(screen, picture, fullscreen=True):
     if fullscreen:
         img = pygame.transform.scale(picture, screen.get_size())
     else:

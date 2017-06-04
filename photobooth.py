@@ -119,9 +119,12 @@ class PhotoBooth(object):
         self.screen = None
         self._state = None
         self._last_state = None
+        # tuple of (pygame.image, image path)
         self._last_photo_resized = None
+        # tuple of (pygame.image, image path)
+        self._last_photo = None
         self._taken_photos = []
-        self._tmp_dir = TEMP_DIRECTORY
+        self.tmp_dir = TEMP_DIRECTORY
 
         self.fullscreen=fullscreen
         # Detect the screen resolution
@@ -175,10 +178,27 @@ class PhotoBooth(object):
 
     @property
     def last_photo(self):
+        """
+        last photo
+        :return: tuple of (pygame.image, image path)
+        """
+        return self._last_photo
+
+    @property
+    def last_photo_resized(self):
+        """
+        last photo already resized to screen
+        :return: tuple of (pygame.image, image path)
+        """
         return self._last_photo_resized
 
     @last_photo.setter
     def last_photo(self, value):
+        """
+        set new photo
+        :param value: tuple of (pygame.image, image path)
+        """
+        self._last_photo = value
         #resize photo to screen
         self._last_photo_resized = (pygame.transform.scale(value[0], self.screen.get_size()), value[1])
 
@@ -363,8 +383,7 @@ class StateShowPhoto(PhotoBoothState):
         super(StateShowPhoto, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
     def update_callback(self):
-        show_cam_picture(self.photobooth.screen, app.last_photo[0])
-        #show_text_left(self.photobooth.screen, _("Last Photo:"), (20, INFO_TEXT_Y_POS), INFO_FONT_SIZE)
+        show_cam_picture(self.photobooth.screen, self.photobooth.last_photo_resized[0])
 
 class StatePrinting(PhotoBoothState):
     """
@@ -384,7 +403,7 @@ class StatePrinting(PhotoBoothState):
             return False
 
     def update_callback(self):
-        show_cam_picture(self.photobooth.screen, app.last_photo[0])
+        show_cam_picture(self.photobooth.screen, self.photobooth.last_photo_resized[0])
 
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
@@ -397,7 +416,7 @@ class StatePrinting(PhotoBoothState):
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
             draw_wait_box(screen=self.photobooth.screen, text=_("Please wait, printing ..."))
-            if self.print_photo(app.last_photo[1]):
+            if self.print_photo(self.photobooth.last_photo[1]):
                 self.switch_next()
                 self._error_txt = None
             else: # failure
@@ -420,17 +439,20 @@ class StateFilter(PhotoBoothState):
 
         self._picture_size = ()
 
-    def filter_photo_fullsize(self, photo, idx , dest):
+    def filter_photo_fullsize(self, photo, idx, dest):
         """
         filter photo in full resolution
-        :param photo: tuple (pygame.image,path)
+        :param photo: tuple (pygame.image, path)
         :param idx: filter_idx to apply
         :param dest: destination path of photo
         :return: tuple (pygame.image,path) of new photo
         """
         filter_file = dest
 
-        if self.apply_photo_filter(photo[1], idx, dest):
+        width = photo[0].get_size()[0]
+        height =photo[0].get_size()[1]
+
+        if self.apply_photo_filter(input_file=photo[1], idx=idx, output_file=dest, width=width, height=height):
 
             photo_obj = pygame.image.load(filter_file)
 
@@ -448,7 +470,7 @@ class StateFilter(PhotoBoothState):
         :return: tuple (pygame.image,path) of new photo
         """
 
-        filter_file = self.photobooth._tmp_dir + "/filter" + str(idx) + ".jpg"
+        filter_file = self.photobooth.tmp_dir + "/filter" + str(idx) + ".jpg"
 
         pygame.image.save(photo[0], filter_file)
 
@@ -461,24 +483,28 @@ class StateFilter(PhotoBoothState):
         else:
             return photo
 
-    def apply_photo_filter(self, input_file, idx, output_file=None):
+    def apply_photo_filter(self, input_file, idx, output_file=None, width=None, height=None):
         """
         apply a photo filter
         :param input_file: the photo file to filter
         :param idx: the idx of the filter to use
         :param output_file: the created file
+        :param width: optional width of image to save some image loading
+        :param height: optional height of image to save some image loading
         :return: True if a filter was applied
         """
 
         fil = None
         if idx == 1:
-            fil = Nashville(filename=input_file, output_filename=output_file)
+            fil = Nashville(filename=input_file, output_filename=output_file, width=width, height=height)
         if idx == 2:
-            fil = Toaster(filename=input_file, output_filename=output_file)
+            fil = Toaster(filename=input_file, output_filename=output_file, width=width, height=height)
         if idx == 3:
-            fil = BlackAndWhite(filename=input_file, output_filename=output_file)
+            fil = BlackAndWhite(filename=input_file, output_filename=output_file, width=width, height=height)
+
         if fil:
             fil.apply()
+            fil.close_image()
             return True
         else:
             return False
@@ -487,8 +513,8 @@ class StateFilter(PhotoBoothState):
         """
         Create small thumbnail preview filtered photos
         """
-
-        scaled_original_photo = (pygame.transform.scale(app.last_photo[0], self._picture_size), app.last_photo[1])
+        last_photo = self.photobooth.last_photo_resized
+        scaled_original_photo = (pygame.transform.scale(last_photo[0], self._picture_size), last_photo[1])
 
         self.filter_photos = [
             scaled_original_photo,
@@ -501,11 +527,11 @@ class StateFilter(PhotoBoothState):
         """
         draw filter previews to screen
         """
-
-        self.photobooth.screen.blit(self.filter_photos[0][0], (0, 0))
-        self.photobooth.screen.blit(self.filter_photos[1][0], (self._picture_size[0], 0))
-        self.photobooth.screen.blit(self.filter_photos[2][0], (0, self._picture_size[1]))
-        self.photobooth.screen.blit(self.filter_photos[3][0], (self._picture_size[0], self._picture_size[1]))
+        if len(self.filter_photos) > 0:
+            self.photobooth.screen.blit(self.filter_photos[0][0], (0, 0))
+            self.photobooth.screen.blit(self.filter_photos[1][0], (self._picture_size[0], 0))
+            self.photobooth.screen.blit(self.filter_photos[2][0], (0, self._picture_size[1]))
+            self.photobooth.screen.blit(self.filter_photos[3][0], (self._picture_size[0], self._picture_size[1]))
 
     def update_callback(self):
 
@@ -514,12 +540,12 @@ class StateFilter(PhotoBoothState):
         for i in range(len(self.filter_photos)):
             if self.photobooth.io_manager.button_idx_pressed(idx=i):
                 # create final file name
-                path, ext = os.path.splitext(app.last_photo[1])
+                path, ext = os.path.splitext(self.photobooth.last_photo[1])
 
                 filter_file = path + '_filtered' + ext
                 draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
                 # redo filtering on full image resolution
-                self.photobooth.last_photo = self.filter_photo_fullsize(photo=app.last_photo,idx=i,dest=filter_file)
+                self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo, idx=i, dest=filter_file)
                 self.switch_next()
                 break
 
@@ -539,7 +565,7 @@ class StateFilter(PhotoBoothState):
 
         self._picture_size = (self.photobooth.screen.get_size()[0] // 2, self.photobooth.screen.get_size()[1] // 2)
 
-        if app.last_photo:
+        if self.photobooth.last_photo_resized:
             self.create_filtered_photo_collection()
 
 

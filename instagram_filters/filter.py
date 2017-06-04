@@ -9,20 +9,30 @@ class Filter(imagemagick.Convert):
     Common image filter class
     """
 
-    def __init__(self, filename, output_filename=None):
+    def __init__(self, filename, output_filename=None, width=None, height=None):
+        """
+        :param filename: input file path
+        :param output_filename:  output file path, if None, input file will be replaced
+        :param width: optional width of the image, might speed up filter process
+        :param height: optional height of the image, might speed up filter process
+        """
         if not output_filename:
             output_filename = filename
         super(Filter, self).__init__(input_file=filename,output_file=output_filename)
 
         self._image = False
 
-        image = self.image()
-        self.default_params['width'] = image.size[0]
-        self.default_params['height'] = image.size[1]
+        if not width or not height:
+            image = self.image()
+            self.default_params['width'] = image.size[0]
+            self.default_params['height'] = image.size[1]
+        else:
+            self.default_params['width'] = width
+            self.default_params['height'] = height
 
     def close_image(self):
-        if self.image:
-            self.image.close()
+        if self._image:
+            self._image.close()
 
     def image(self):
         if not self._image:

@@ -1,6 +1,7 @@
 from instagram_filters.filter import Filter
 from instagram_filters.decorations import Frame
 
+
 class Kelvin(Filter):
 
     def _filter_callback(self):
