@@ -157,7 +157,7 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
     pos_x = pos[0]
     pos_y = pos[1]
 
-    bar_width = 6 * radius + 4 * margin
+    bar_width = 10 * radius + 3 * margin
 
     # horizontal center alignment
     if pos_x is None:
@@ -167,6 +167,7 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
     if pos_y is None:
         pos_y = get_text_mid_position(screen.get_size())[1] - radius // 2
 
+    pos_x += 2*radius
     if text[0]:
         draw_circle(screen=screen, pos=(pos_x,pos_y), size=radius, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen,text=text[0],mid_pos=(pos_x,pos_y),size=font_size,color=COLOR_WHITE)
@@ -182,6 +183,7 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
     if text[3]:
         draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[3], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+
 
 def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=30):
     pos_x = pos[0]
