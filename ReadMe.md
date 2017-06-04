@@ -1,13 +1,13 @@
-#Dependencies
+# Dependencies
 
 ```sudo apt install python-piggyphoto python-pygame```
 
-#Setup
+# Setup
 
 Disable the GPhoto2 Volumen Monitor
 ```disable_gphoto2_gvfs.sh```
 
-#Update localization
+# Update localization
 
 1. Extract strings
 ```
