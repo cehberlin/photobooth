@@ -249,14 +249,17 @@ class StateWaitingForCamera(PhotoBoothState):
     def update_callback(self):
         # try initialisation again
         try:
+            #background color
+            draw_rect(self.photobooth.screen, (0, 0), self.photobooth.app_resolution)
             if self.photobooth.io_manager.admin_button_pressed():
                 if self.admin_state:
                     self.photobooth.state = self.admin_state
             self.photobooth.init_camera()
             self.switch_next()
         except Exception as e:
-            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e),
-                          get_text_mid_position(self.photobooth.app_resolution), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            pos = get_text_mid_position(self.photobooth.app_resolution)
+            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e), (pos[0],pos[1]+60),
+                           size=INFO_FONT_SIZE, color=COLOR_ORANGE)
             time.sleep(1)
 
 
@@ -343,12 +346,14 @@ class StatePhotoTrigger(PhotoBoothState):
         super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state,
                                                 failure_state=failure_state, counter=counter,
                                                 counter_callback=self._take_photo)
+        self._arrow_img = pygame.image.load('res/arrow.png')
+        self._mid_position = get_text_mid_position(self.photobooth.app_resolution)
 
     def update_callback(self):
         preview_img = self.photobooth.cam.get_preview()
         show_cam_picture(self.photobooth.screen, preview_img)
         # Show countdown
-        show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
+        show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         if self.counter == 1:
@@ -363,17 +368,24 @@ class StatePhotoTrigger(PhotoBoothState):
 
     def reset(self):
         super(StatePhotoTrigger, self).reset()
+        self._mid_position = get_text_mid_position(self.photobooth.app_resolution) # update in case resolution changed
         if self.photobooth.cam:
             self.photobooth.cam.enable_live_autofocus()
         
     def _take_photo(self):
-        #first update to latest preview
-        preview_img = self.photobooth.cam.get_preview()
-        show_cam_picture(self.photobooth.screen, preview_img)
-        pygame.display.update()
+        #preview_img = self.photobooth.cam.get_preview()
+        #show_cam_picture(self.photobooth.screen, preview_img)
+
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-        #take photo
+        pos = (self._mid_position[0] - (self._arrow_img.get_size()[0]//2),10)
+        draw_rect(self.photobooth.screen, (0, 0),
+                  (self.photobooth.app_resolution[0], self.photobooth.app_resolution[1]))
+        self.photobooth.screen.blit(self._arrow_img, pos)
+        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0],self._mid_position[1]-60), COUNTER_FONT_SIZE)
+        pygame.display.update()
+
+        # take photo
         self.photobooth.last_photo = self.photobooth.cam.take_photo()
 
         self.photobooth.io_manager.set_all_led(LedState.ON)
@@ -442,11 +454,8 @@ class StateFilter(PhotoBoothState):
         super(StateFilter, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
 
         self.filter_photos = []
-
         self._picture_size = ()
-
         self._current_filter_idx = 0
-
         self._filter_count = 4
 
     def filter_photo_fullsize(self, photo, idx, dest):
@@ -576,7 +585,6 @@ class StateFilter(PhotoBoothState):
             self._current_filter_idx -= 1
 
         self._current_filter_idx = self._current_filter_idx % self._filter_count
-        print(self._current_filter_idx)
 
         if self.photobooth.io_manager.cancel_button_pressed():
             self.switch_state(self.failure_state)
