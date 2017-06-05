@@ -271,6 +271,7 @@ class StateShowSlideShow(PhotoBoothState):
         super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
         self._photo_set = []
         self.current_photo = None
+        self._logo_img = pygame.image.load('res/logo.png')
 
     def update_callback(self):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
@@ -278,10 +279,18 @@ class StateShowSlideShow(PhotoBoothState):
 
         if self.current_photo:
             show_cam_picture(self.photobooth.screen, self.current_photo)
+            if self._logo_img:
+                self.draw_logo(self._logo_img)
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
+
+    def draw_logo(self, logo):
+        offset = 15
+        img_size = logo.get_size()
+        pos = (self.photobooth.app_resolution[0] - img_size[0] - offset, offset)
+        self.photobooth.screen.blit(logo, pos)
 
     def _next_photo(self):
         if len(self._photo_set) > 0:
@@ -376,7 +385,7 @@ class StatePhotoTrigger(PhotoBoothState):
         draw_rect(self.photobooth.screen, (0, 0),
                   (self.photobooth.app_resolution[0], self.photobooth.app_resolution[1]))
         self.photobooth.screen.blit(self._arrow_img, pos)
-        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0], arrow_size[1]+20 ),
+        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0], arrow_size[1]+50 ),
                       COUNTER_FONT_SIZE, color=COLOR_DARK_GREY)
 
     def reset(self):
