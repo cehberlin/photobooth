@@ -284,7 +284,7 @@ class StateShowSlideShow(PhotoBoothState):
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, self.photobooth.app_resolution[1]-80), size=INFO_FONT_SIZE)
 
     def draw_logo(self, logo):
         offset = 15
