@@ -5,6 +5,7 @@ import random
 import os
 import socket
 import gettext
+import traceback
 
 #Own modules
 from pygame_utils import *
@@ -51,10 +52,12 @@ def draw_wait_box(screen, text):
 
 class PhotoBoothState(object):
 
-    def __init__(self, photobooth, next_state, counter_callback=None, counter_callback_args=None, counter=-1):
+    def __init__(self, photobooth, next_state, failure_state=None, counter_callback=None, counter_callback_args=None, counter=-1):
         self.photobooth = photobooth
         self.next_state = next_state
         self.inital_counter = counter
+
+        self.failure_state = failure_state
 
         self.counter_callback = counter_callback
         self.counter_callback_args = counter_callback_args
@@ -74,8 +77,17 @@ class PhotoBoothState(object):
         pass
 
     def update(self):
-        self.update_callback()
-        self.update_counter()
+        try:
+            self.update_callback()
+            self.update_counter()
+        except Exception:
+            print(traceback.format_exc())
+            if self.failure_state:
+                self.switch_state(self.failure_state)
+            else:
+                print('No failure_state defined, trying to switch to last state')
+                self.switch_last()
+            return
 
     def update_counter(self):
 
@@ -159,8 +171,11 @@ class PhotoBooth(object):
         self.app_resolution = self.screen.get_size()
 
     def init_camera(self):
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
+        if self.cam:
+            self.cam.close()
 
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
+        self.cam.disable_live_autofocus()
         self.set_fullscreen(self.fullscreen)
 
     def update(self):
@@ -291,10 +306,11 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
     """
     State waiting for people initiating the next photo
     """
-    def __init__(self, photobooth, next_state, timeout_state = None, admin_state=None,failure_state=None, counter=-1):
-        super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._switch_timeout_state)
+    def __init__(self, photobooth, next_state, timeout_state = None, admin_state=None, failure_state=None, counter=-1):
+        super(StateWaitingForPhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state,
+                                                          failure_state=failure_state, counter=counter,
+                                                          counter_callback=self._switch_timeout_state)
         self.timeout_state = timeout_state
-        self.failure_state = failure_state
         self.admin_state = admin_state
 
     def update_callback(self):
@@ -303,13 +319,8 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
                 self.photobooth.state = self.admin_state
         elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
-        try:
-            preview_img = self.photobooth.cam.get_preview()
-            show_cam_picture(self.photobooth.screen, preview_img)
-        except Exception as e:
-            print("Getting preview failed:" + str(e))
-            if self.failure_state:
-                self.photobooth.state = self.failure_state
+        preview_img = self.photobooth.cam.get_preview()
+        show_cam_picture(self.photobooth.screen, preview_img)
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
         self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
@@ -329,31 +340,26 @@ class StatePhotoTrigger(PhotoBoothState):
     Count down photo trigger state
     """
     def __init__(self, photobooth, next_state, failure_state=None, counter=-1):
-        super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._take_photo)
-        self.failure_state = failure_state
-        
+        super(StatePhotoTrigger, self).__init__(photobooth=photobooth, next_state=next_state,
+                                                failure_state=failure_state, counter=counter,
+                                                counter_callback=self._take_photo)
+
     def update_callback(self):
-        try:
-            preview_img = self.photobooth.cam.get_preview()
-            show_cam_picture(self.photobooth.screen, preview_img)
-            # Show countdown
-            show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
-            self.photobooth.io_manager.show_led_coutdown(self.counter)
+        preview_img = self.photobooth.cam.get_preview()
+        show_cam_picture(self.photobooth.screen, preview_img)
+        # Show countdown
+        show_text_mid(self.photobooth.screen, str(self.counter), get_text_mid_position(self.photobooth.app_resolution), COUNTER_FONT_SIZE)
+        self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-            if self.counter == 1:
-                self.photobooth.cam.disable_live_autofocus()
+        if self.counter == 1:
+            self.photobooth.cam.disable_live_autofocus()
 
-            #cancel photo if necessary
-            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
-                            pos=(None, self.photobooth.app_resolution[1] - 60))
-            if self.photobooth.io_manager.cancel_button_pressed():
-                self.photobooth.cam.disable_live_autofocus()
-                self.switch_last()
-
-        except Exception as e:
-            print("Photo trigger failed:" + str(e))
-            if self.failure_state:
-                self.photobooth.state = self.failure_state
+        #cancel photo if necessary
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
+                        pos=(None, self.photobooth.app_resolution[1] - 60))
+        if self.photobooth.io_manager.cancel_button_pressed():
+            self.photobooth.cam.disable_live_autofocus()
+            self.switch_last()
 
     def reset(self):
         super(StatePhotoTrigger, self).reset()
@@ -438,6 +444,10 @@ class StateFilter(PhotoBoothState):
         self.filter_photos = []
 
         self._picture_size = ()
+
+        self._current_filter_idx = 0
+
+        self._filter_count = 4
 
     def filter_photo_fullsize(self, photo, idx, dest):
         """
@@ -528,36 +538,72 @@ class StateFilter(PhotoBoothState):
         draw filter previews to screen
         """
         if len(self.filter_photos) > 0:
-            self.photobooth.screen.blit(self.filter_photos[0][0], (0, 0))
-            self.photobooth.screen.blit(self.filter_photos[1][0], (self._picture_size[0], 0))
-            self.photobooth.screen.blit(self.filter_photos[2][0], (0, self._picture_size[1]))
-            self.photobooth.screen.blit(self.filter_photos[3][0], (self._picture_size[0], self._picture_size[1]))
+            image_pos = (0, 0)
+            rect_pos = image_pos
+            self.photobooth.screen.blit(self.filter_photos[0][0], image_pos)
+            if self._current_filter_idx == 0:
+                rect_pos = image_pos
+            image_pos = (self._picture_size[0], 0)
+            self.photobooth.screen.blit(self.filter_photos[1][0], image_pos)
+            if self._current_filter_idx == 1:
+                rect_pos = image_pos
+            image_pos = ( 0, self._picture_size[1])
+            self.photobooth.screen.blit(self.filter_photos[2][0], image_pos)
+            if self._current_filter_idx == 2:
+                rect_pos = image_pos
+            image_pos = self._picture_size
+            self.photobooth.screen.blit(self.filter_photos[3][0], image_pos)
+            if self._current_filter_idx == 3:
+                rect_pos = image_pos
+            draw_rect(self.photobooth.screen, rect_pos, self._picture_size, color=None, color_border=COLOR_ORANGE,
+                      size_border=8)
+            text_margin = 10
+            selected_image_text_pos = (rect_pos[0] + text_margin,rect_pos[1]+ text_margin)
+            draw_text_box(screen=self.photobooth.screen, text=_("Selected"), pos= selected_image_text_pos,
+                          size=INFO_FONT_SIZE, box_color=None, border_color=COLOR_ORANGE, size_border=5, text_color=COLOR_ORANGE)
+
+    def draw_selected(self):
+        pass
 
     def update_callback(self):
 
         self.draw_filtered_photos()
 
-        for i in range(len(self.filter_photos)):
-            if self.photobooth.io_manager.button_idx_pressed(idx=i):
-                # create final file name
-                path, ext = os.path.splitext(self.photobooth.last_photo[1])
+        # handle filter selection
+        if self.photobooth.io_manager.next_button_pressed():
+            self._current_filter_idx += 1
+        if self.photobooth.io_manager.prev_button_pressed():
+            self._current_filter_idx -= 1
 
-                filter_file = path + '_filtered' + ext
-                draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
-                # redo filtering on full image resolution
-                self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo, idx=i, dest=filter_file)
-                self.switch_next()
-                break
+        self._current_filter_idx = self._current_filter_idx % self._filter_count
+        print(self._current_filter_idx)
+
+        if self.photobooth.io_manager.cancel_button_pressed():
+            self.switch_state(self.failure_state)
+            return
+
+        if self.photobooth.io_manager.accept_button_pressed():
+
+            # create final file name
+            path, ext = os.path.splitext(self.photobooth.last_photo[1])
+
+            filter_file = path + '_filtered' + ext
+            draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
+            # redo filtering on full image resolution
+            self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo, idx=self._current_filter_idx, dest=filter_file)
+
+            self.switch_next()
+            return
 
         draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
-        draw_button_rect(self.photobooth.screen, text=[_("(1)"), "(2)", "(3)", _("(4)")], pos=(None, None))
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
 
     def reset(self):
         super(StateFilter, self).reset()
 
         draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
-
+        self._current_filter_idx = 0
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
@@ -784,9 +830,14 @@ if __name__ == '__main__':
     state_timeout_slide_show.next_state = state_waiting_for_photo_trigger
 
     state_waiting_for_camera = StateWaitingForCamera(photobooth=app, next_state=state_waiting_for_photo_trigger, admin_state=state_admin)
+
+    state_admin.next_state = state_waiting_for_camera
+
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
-    state_admin.next_state = state_waiting_for_camera
+    state_printing.failure_state = state_waiting_for_photo_trigger
+    state_filter_photo.failure_state = state_waiting_for_camera #state_waiting_for_photo_trigger
+    state_show_photo.failure_state = state_waiting_for_photo_trigger
 
     #Enable the states we want to use
     state_waiting_for_camera.enabled = True

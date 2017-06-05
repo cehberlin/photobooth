@@ -112,10 +112,10 @@ class PyGameUserIo(AbstractUserIo):
         return self._photobooth.event_manager.key_pressed([pygame.K_a])
 
     def next_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_2])
+        return self._photobooth.event_manager.key_pressed([pygame.K_3])
 
     def prev_button_pressed(self, reset = True):
-        return self._photobooth.event_manager.key_pressed([pygame.K_3])
+        return self._photobooth.event_manager.key_pressed([pygame.K_2])
 
     def button_idx_pressed(self, idx):
         if idx == 0:

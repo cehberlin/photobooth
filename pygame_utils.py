@@ -82,7 +82,8 @@ def get_text_img(text, size, color):
     return font.render(text, True, color)
 
 def draw_rect(screen, pos, size, color=COLOR_GREY, color_border=None, size_border = 1):
-    pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
+    if color:
+        pygame.draw.rect(screen, color, (pos[0],pos[1],size[0],size[1]))
     if color_border:
         pygame.draw.rect(screen, color_border, (pos[0], pos[1], size[0], size[1]),size_border)
 
@@ -91,7 +92,7 @@ def draw_circle(screen, pos, size, color, color_border=None, size_border = 1):
     if color_border:
         pygame.draw.circle(screen, color_border, pos, size, size_border)
 
-def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10):
+def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10, size_border=1):
     """
     Draw a text box
     :param screen: pygame screen
@@ -109,20 +110,20 @@ def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DA
     rect_size = (txt_img.get_width() + margin*2, txt_img.get_height() + margin*2)
 
     #vertical center alignment
-    if not pos[0]:
+    if pos[0] is None:
         pos_x = get_text_mid_position(screen.get_size())[0] - rect_size[0]//2
     else:
         pos_x = pos[0]
 
     # horizontal center alignment
-    if not pos[1]:
+    if pos[1] is None:
         pos_y = get_text_mid_position(screen.get_size())[1] - rect_size[1] // 2
     else:
         pos_y = pos[1]
 
     rect_pos = (pos_x - margin, pos_y - margin)
 
-    draw_rect(screen=screen, pos=rect_pos, size=rect_size, color=box_color, color_border=border_color)
+    draw_rect(screen=screen, pos=rect_pos, size=rect_size, color=box_color, color_border=border_color, size_border=size_border)
 
     screen.blit(txt_img,(pos_x,pos_y))
 
@@ -156,16 +157,17 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
     pos_x = pos[0]
     pos_y = pos[1]
 
-    bar_width = 6 * radius + 4 * margin
+    bar_width = 10 * radius + 3 * margin
 
     # horizontal center alignment
-    if not pos_x:
+    if pos_x is None:
         pos_x = get_text_mid_position(screen.get_size())[0] - bar_width//2
 
     # vertical center alignment
-    if not pos_y:
+    if pos_y is None:
         pos_y = get_text_mid_position(screen.get_size())[1] - radius // 2
 
+    pos_x += 2*radius
     if text[0]:
         draw_circle(screen=screen, pos=(pos_x,pos_y), size=radius, color=COLOR_RED, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen,text=text[0],mid_pos=(pos_x,pos_y),size=font_size,color=COLOR_WHITE)
@@ -175,12 +177,13 @@ def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font
         show_text_mid(screen=screen, text=text[1], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[2]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_ORANGE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[3]:
         draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_GREEN, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[3], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
+
 
 def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=30):
     pos_x = pos[0]
@@ -191,11 +194,11 @@ def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, fon
     mid_position = get_text_mid_position(screen.get_size())
 
     # horizontal center alignment
-    if not pos_x:
+    if pos_x is None:
         pos_x = mid_position[0] - rect_width // 2
 
     # vertical center alignment
-    if not pos_y:
+    if pos_y is None:
         pos_y = mid_position[1] - rect_width // 2
 
     if text[0]:
@@ -208,7 +211,7 @@ def draw_button_rect(screen, text=["","","",""], pos=(None,None), radius=50, fon
     pos_x -= margin + radius * 2
     pos_y += margin + radius * 2
     if text[2]:
-        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_YELLOW, color_border=COLOR_WHITE, size_border=1)
+        draw_circle(screen=screen, pos=(pos_x, pos_y), size=radius, color=COLOR_ORANGE, color_border=COLOR_WHITE, size_border=1)
         show_text_mid(screen=screen, text=text[2], mid_pos=(pos_x, pos_y), size=font_size, color=COLOR_WHITE)
     pos_x += margin + radius * 2
     if text[3]:
