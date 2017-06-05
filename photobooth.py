@@ -26,7 +26,7 @@ INFO_TEXT_Y_POS = 100
 # Timing configurations
 
 PHOTO_TIMEOUT = 30
-PHOTO_COUNTDOWN = 5
+PHOTO_COUNTDOWN = 6
 PHOTO_SHOW_TIME = 3
 SLIDE_SHOW_TIMEOUT = 15
 PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
@@ -258,7 +258,7 @@ class StateWaitingForCamera(PhotoBoothState):
             self.switch_next()
         except Exception as e:
             pos = get_text_mid_position(self.photobooth.app_resolution)
-            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e), (pos[0],pos[1]+60),
+            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e), pos,
                            size=INFO_FONT_SIZE, color=COLOR_ORANGE)
             time.sleep(1)
 
@@ -350,14 +350,18 @@ class StatePhotoTrigger(PhotoBoothState):
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution)
 
     def update_callback(self):
-        preview_img = self.photobooth.cam.get_preview()
-        show_cam_picture(self.photobooth.screen, preview_img)
-        # Show countdown
-        show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
+
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         if self.counter == 1:
             self.photobooth.cam.disable_live_autofocus()
+            self.show_final_view()
+        else:
+            preview_img = self.photobooth.cam.get_preview()
+            show_cam_picture(self.photobooth.screen, preview_img)
+
+            # Show countdown
+            show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
 
         #cancel photo if necessary
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
@@ -366,6 +370,14 @@ class StatePhotoTrigger(PhotoBoothState):
             self.photobooth.cam.disable_live_autofocus()
             self.switch_last()
 
+    def show_final_view(self):
+        pos = (self._mid_position[0] - (self._arrow_img.get_size()[0] // 2), 50)
+        draw_rect(self.photobooth.screen, (0, 0),
+                  (self.photobooth.app_resolution[0], self.photobooth.app_resolution[1]))
+        self.photobooth.screen.blit(self._arrow_img, pos)
+        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0], self._mid_position[1] - 60),
+                      COUNTER_FONT_SIZE)
+
     def reset(self):
         super(StatePhotoTrigger, self).reset()
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution) # update in case resolution changed
@@ -373,17 +385,8 @@ class StatePhotoTrigger(PhotoBoothState):
             self.photobooth.cam.enable_live_autofocus()
         
     def _take_photo(self):
-        #preview_img = self.photobooth.cam.get_preview()
-        #show_cam_picture(self.photobooth.screen, preview_img)
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
-
-        pos = (self._mid_position[0] - (self._arrow_img.get_size()[0]//2),10)
-        draw_rect(self.photobooth.screen, (0, 0),
-                  (self.photobooth.app_resolution[0], self.photobooth.app_resolution[1]))
-        self.photobooth.screen.blit(self._arrow_img, pos)
-        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0],self._mid_position[1]-60), COUNTER_FONT_SIZE)
-        pygame.display.update()
 
         # take photo
         self.photobooth.last_photo = self.photobooth.cam.take_photo()
