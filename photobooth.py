@@ -381,11 +381,12 @@ class StatePhotoTrigger(PhotoBoothState):
 
     def show_final_view(self):
         arrow_size = self._arrow_img.get_size()
-        pos = (self._mid_position[0] - (arrow_size[0] // 2), 50)
+        offset = 50
+        pos = (self._mid_position[0] - (arrow_size[0] // 2), offset)
         draw_rect(self.photobooth.screen, (0, 0),
                   (self.photobooth.app_resolution[0], self.photobooth.app_resolution[1]))
         self.photobooth.screen.blit(self._arrow_img, pos)
-        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0], arrow_size[1]+50 ),
+        show_text_mid(self.photobooth.screen, _("Smile :-)"), (self._mid_position[0], arrow_size[1]+50 + offset),
                       COUNTER_FONT_SIZE, color=COLOR_DARK_GREY)
 
     def reset(self):
