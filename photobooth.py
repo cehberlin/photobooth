@@ -13,6 +13,7 @@ from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
 from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
 import print_utils
+import storage
 
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
@@ -37,6 +38,7 @@ LANGUAGE_ID = 'de'
 # Directories
 PHOTO_DIRECTORY = 'images'
 TEMP_DIRECTORY = 'tmp'
+USB_DEVICE = '/dev/sdi1'
 
 # Implementation configuration / module selection
 #options 'pygame', 'raspi'
@@ -153,9 +155,7 @@ class PhotoBooth(object):
 
         self.io_manager = get_user_io_factory().create_algorithm(id_class=IO_MANAGER_CLASS, photobooth=self)
 
-        #create photo directory if necessary
-        if not os.path.exists(PHOTO_DIRECTORY):
-            os.makedirs(PHOTO_DIRECTORY)
+        self.change_photo_dir(PHOTO_DIRECTORY)
 
     def set_fullscreen(self, fullscreen):
         if fullscreen:
@@ -170,11 +170,20 @@ class PhotoBooth(object):
 
         self.app_resolution = self.screen.get_size()
 
+    def change_photo_dir(self, new_directory):
+
+        self.photo_directory = new_directory
+        # create photo directory if necessary
+        if not os.path.exists(self.photo_directory):
+            os.makedirs(self.photo_directory)
+
+        self.init_camera()
+
     def init_camera(self):
         if self.cam:
             self.cam.close()
 
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=PHOTO_DIRECTORY, tmp_directory=TEMP_DIRECTORY)
+        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=self.photo_directory, tmp_directory=TEMP_DIRECTORY)
         self.cam.disable_live_autofocus()
         self.set_fullscreen(self.fullscreen)
 
@@ -303,7 +312,7 @@ class StateShowSlideShow(PhotoBoothState):
 
     def _reload_photo_set(self):
         # load all images from directory
-        self._photo_set = glob.glob(PHOTO_DIRECTORY + "/*.jpg")
+        self._photo_set = glob.glob(self.photobooth.photo_directory + "/*.jpg")
 
     def reset(self):
         super(StateShowSlideShow, self).reset()
@@ -660,7 +669,8 @@ class StateAdmin(PhotoBoothState):
             (_("Close photobooth"), self.photobooth.close),
             (_("Shutdown all"), self.shutdown_all),
             (_("Start printer"), self.start_printer),
-            (_("Stop printer"), self.stop_printer)
+            (_("Stop printer"), self.stop_printer),
+            (_("Mount/Umount USB storage"), self.toggle_usb_storage),
         ]
 
     def enable_input(self):
@@ -695,6 +705,14 @@ class StateAdmin(PhotoBoothState):
         if self.state_printing:
             self.state_printing.enabled = not self.state_printing.enabled
 
+    def toggle_usb_storage(self):
+        if self.photobooth.photo_directory == PHOTO_DIRECTORY:
+            storage.umount_device(USB_DEVICE)
+            self.photobooth.change_photo_dir(storage.mount_device(USB_DEVICE))
+        else:
+            storage.umount_device(USB_DEVICE)
+            self.photobooth.change_photo_dir(PHOTO_DIRECTORY)
+
     def get_free_space(self):
         """
         Determine free space in current directory
@@ -710,7 +728,7 @@ class StateAdmin(PhotoBoothState):
         return s.getsockname()[0]
 
     def get_number_taken_photos(self):
-        return len(glob.glob(PHOTO_DIRECTORY + "/*.jpg"))
+        return len(glob.glob(self.photobooth.photo_directory + "/*.jpg"))
 
     def update_callback(self):
         # Background
@@ -731,6 +749,9 @@ class StateAdmin(PhotoBoothState):
         show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
         show_text_left(self.photobooth.screen, _("Printer available: ") + str(self._printer_state), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
+        show_text_left(self.photobooth.screen, _("Photo directory: ") + str(self.photobooth.photo_directory), (x_pos, y_pos),
+                       INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
         show_text_left(self.photobooth.screen, _("Taken photos: ") + str(self._taken_photos), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
