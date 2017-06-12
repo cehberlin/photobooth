@@ -713,12 +713,14 @@ class StateAdmin(PhotoBoothState):
             storage.umount_device(USB_DEVICE)
             self.photobooth.change_photo_dir(PHOTO_DIRECTORY)
 
+        self.refresh_information()
+
     def get_free_space(self):
         """
         Determine free space in current directory
         :return: free space in MB
         """
-        st = os.statvfs('.')
+        st = os.statvfs(self.photobooth.photo_directory)
         free_mb = st.f_bsize * st.f_bavail // 1024 // 1024
         return free_mb
 
@@ -831,14 +833,18 @@ class StateAdmin(PhotoBoothState):
 
     def reset(self):
         super(StateAdmin, self).reset()
-        self._free_space = self.get_free_space()
-        self._ip_address = self.get_ip_address()
-        self._printer_state = print_utils.printer_available()
-        self._taken_photos = self.get_number_taken_photos()
+        self.refresh_information()
         self._current_option_idx = 0
         self._option_confirmed = False
         self._request_confirmation = False
         self._error_text = ""
+
+    def refresh_information(self):
+        self._free_space = self.get_free_space()
+        self._ip_address = self.get_ip_address()
+        self._printer_state = print_utils.printer_available()
+        self._taken_photos = self.get_number_taken_photos()
+
 
 if __name__ == '__main__':
 
