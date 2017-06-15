@@ -719,7 +719,7 @@ class StateAdmin(PhotoBoothState):
         ssid = _("WiFi not found")
 
         try:
-            scanoutput = check_output(["iwlist", "wlan0", "scan"])
+            scanoutput = check_output(["iwconfig", "wlan0"])
             for line in scanoutput.split():
                 line = line.decode("utf-8")
                 if line[:5] == "ESSID":
