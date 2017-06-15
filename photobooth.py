@@ -8,6 +8,7 @@ import gettext
 import traceback
 import yaml
 import sys
+from subprocess import check_output
 
 #Own modules
 from pygame_utils import *
@@ -714,10 +715,19 @@ class StateAdmin(PhotoBoothState):
         return s.getsockname()[0]
 
     def get_network_name(self):
-        #TODO
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
+
+        ssid = _("WiFi not found")
+
+        try:
+            scanoutput = check_output(["iwlist", "wlan0", "scan"])
+            for line in scanoutput.split():
+                line = line.decode("utf-8")
+                if line[:5] == "ESSID":
+                    ssid = line.split('"')[1]
+        except:
+            print(traceback.format_exc())
+
+        return ssid
 
     def get_number_taken_photos(self):
         return len(glob.glob(self.photobooth.photo_directory + "/*.jpg"))
