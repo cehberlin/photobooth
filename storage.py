@@ -5,7 +5,7 @@ import shlex
 
 
 def mount_device(device_name, media_label='images'):
-    command = "pmount {device_name} {media_label}".format(device_name=r'"%s"' % device_name,
+    command = "pmount -w {device_name} {media_label}".format(device_name=r'"%s"' % device_name,
                                                           media_label=r'"%s"' % media_label)
     execute_process(command=command)
 
@@ -30,7 +30,7 @@ def execute_process(command):
 
 if __name__ == '__main__':
 
-    dev = '/dev/sdi1'
+    dev = '/dev/sda1'
     umount_device(dev)
     directory = mount_device(dev)
-    #print(directory)
+    print(directory)
