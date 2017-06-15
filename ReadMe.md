@@ -1,6 +1,6 @@
 # Dependencies
 
-```sudo apt install python-piggyphoto python-pygame python-yaml```
+```sudo apt install python-piggyphoto python-pygame python-yaml pmount```
 
 # Setup
 
