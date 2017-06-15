@@ -6,6 +6,8 @@ import os
 import socket
 import gettext
 import traceback
+import yaml
+import sys
 
 #Own modules
 from pygame_utils import *
@@ -17,34 +19,11 @@ import storage
 
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
-START_FULLSCREEN = False
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
 INFO_SMALL_FONT_SIZE = 24
 INFO_TEXT_Y_POS = 100
-
-# Timing configurations
-
-PHOTO_TIMEOUT = 30
-PHOTO_COUNTDOWN = 6
-PHOTO_SHOW_TIME = 3
-SLIDE_SHOW_TIMEOUT = 15
-PHOTO_WAIT_FOR_PRINT_TIMEOUT = 30
-
-# Language options 'de', 'en'
-LANGUAGE_ID = 'de'
-
-# Directories
-PHOTO_DIRECTORY = 'images'
-TEMP_DIRECTORY = 'tmp'
-USB_DEVICE = '/dev/sdi1'
-
-# Implementation configuration / module selection
-#options 'pygame', 'raspi'
-IO_MANAGER_CLASS = 'pygame'
-#options 'dummy', 'piggyphoto'
-CAMERA_CLASS = 'dummy'
 
 
 def draw_wait_box(screen, text):
@@ -127,7 +106,7 @@ class PhotoBoothState(object):
 
 
 class PhotoBooth(object):
-    def __init__(self, fullscreen=False):
+    def __init__(self, config):
 
         self.cam = None
         self.screen = None
@@ -138,9 +117,12 @@ class PhotoBooth(object):
         # tuple of (pygame.image, image path)
         self._last_photo = None
         self._taken_photos = []
-        self.tmp_dir = TEMP_DIRECTORY
 
-        self.fullscreen=fullscreen
+        self.config = config
+
+        self.tmp_dir = config['temp_directory']
+
+        self.fullscreen=bool(config['fullscreen'])
         # Detect the screen resolution
         info_object = pygame.display.Info()
         self.screen_resolution = [info_object.current_w, info_object.current_h]
@@ -153,9 +135,9 @@ class PhotoBooth(object):
             
         self.event_manager = PyGameEventManager()
 
-        self.io_manager = get_user_io_factory().create_algorithm(id_class=IO_MANAGER_CLASS, photobooth=self)
+        self.io_manager = get_user_io_factory().create_algorithm(id_class=config['io_manager'], photobooth=self)
 
-        self.change_photo_dir(PHOTO_DIRECTORY)
+        self.change_photo_dir(config['photo_directory'])
 
     def set_fullscreen(self, fullscreen):
         if fullscreen:
@@ -183,7 +165,7 @@ class PhotoBooth(object):
         if self.cam:
             self.cam.close()
 
-        self.cam = get_camera_factory().create_algorithm(id_class=CAMERA_CLASS, photo_directory=self.photo_directory, tmp_directory=TEMP_DIRECTORY)
+        self.cam = get_camera_factory().create_algorithm(id_class=self.config['camera_type'], photo_directory=self.photo_directory, tmp_directory=self.tmp_dir)
         self.cam.disable_live_autofocus()
         self.set_fullscreen(self.fullscreen)
 
@@ -604,8 +586,10 @@ class StateFilter(PhotoBoothState):
         # handle filter selection
         if self.photobooth.io_manager.next_button_pressed():
             self._current_filter_idx += 1
+            self.set_counter(self.inital_counter)
         if self.photobooth.io_manager.prev_button_pressed():
             self._current_filter_idx -= 1
+            self.set_counter(self.inital_counter)
 
         self._current_filter_idx = self._current_filter_idx % self._filter_count
 
@@ -706,12 +690,12 @@ class StateAdmin(PhotoBoothState):
             self.state_printing.enabled = not self.state_printing.enabled
 
     def toggle_usb_storage(self):
-        if self.photobooth.photo_directory == PHOTO_DIRECTORY:
-            storage.umount_device(USB_DEVICE)
-            self.photobooth.change_photo_dir(storage.mount_device(USB_DEVICE))
+        if self.photobooth.photo_directory == self.photobooth.config['photo_directory']:
+            storage.umount_device(self.photobooth.config['usb_device'])
+            self.photobooth.change_photo_dir(storage.mount_device(self.photobooth.config['usb_device']))
         else:
-            storage.umount_device(USB_DEVICE)
-            self.photobooth.change_photo_dir(PHOTO_DIRECTORY)
+            storage.umount_device(self.photobooth.config['usb_device'])
+            self.photobooth.change_photo_dir(self.photobooth.config['photo_directory'])
 
         self.refresh_information()
 
@@ -725,6 +709,12 @@ class StateAdmin(PhotoBoothState):
         return free_mb
 
     def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+
+    def get_network_name(self):
+        #TODO
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         return s.getsockname()[0]
@@ -747,6 +737,9 @@ class StateAdmin(PhotoBoothState):
                        INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
         show_text_left(self.photobooth.screen, _("Free space: ") + str(self._free_space) + "MB", (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
+        y_pos += 30
+        show_text_left(self.photobooth.screen, _("Network: ") + str(self._network), (x_pos, y_pos), INFO_SMALL_FONT_SIZE,
+                       color=COLOR_DARK_GREY)
         y_pos += 30
         show_text_left(self.photobooth.screen, _("IP: ") + str(self._ip_address), (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
         y_pos += 30
@@ -841,39 +834,54 @@ class StateAdmin(PhotoBoothState):
 
     def refresh_information(self):
         self._free_space = self.get_free_space()
+        self._network = self.get_network_name()
         self._ip_address = self.get_ip_address()
         self._printer_state = print_utils.printer_available()
         self._taken_photos = self.get_number_taken_photos()
 
 
-if __name__ == '__main__':
+def read_configuration():
+    # load configuration
+    if len(sys.argv) < 2:
+        config_file = 'test.cfg'
+    else:
+        config_file = sys.argv[1]
+    with open(config_file, 'r') as ymlfile:
+        cfg = yaml.load(ymlfile)
 
-    #localize application
-    language = gettext.translation('photobooth', localedir='locale', languages=[LANGUAGE_ID])
-    language.install(unicode=True)
+    return cfg
+
+
+if __name__ == '__main__':
 
     pygame.init()
 
-    # create app
-    app = PhotoBooth(fullscreen=START_FULLSCREEN)
+    cfg = read_configuration()
+
+    read_configuration()# localize application
+    language = gettext.translation('photobooth', localedir='locale', languages=[cfg['language']])
+    language.install(unicode=True)
+
+        # create app
+    app = PhotoBooth(config=cfg)
 
     # Create all states
 
-    state_printing = StatePrinting(photobooth=app, next_state=None, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
+    state_printing = StatePrinting(photobooth=app, next_state=None, counter=cfg['wait_for_print_timeout'])
 
-    state_filter_photo = StateFilter(photobooth=app, next_state=state_printing, counter=PHOTO_WAIT_FOR_PRINT_TIMEOUT)
+    state_filter_photo = StateFilter(photobooth=app, next_state=state_printing, counter=cfg['wait_for_print_timeout'])
 
-    state_show_photo = StateShowPhoto(photobooth=app, next_state=state_filter_photo, counter=PHOTO_SHOW_TIME) # enable this state to use without printing
+    state_show_photo = StateShowPhoto(photobooth=app, next_state=state_filter_photo, counter=cfg['photo_show_time']) # enable this state to use without printing
 
     state_admin = StateAdmin(photobooth=app, next_state=None, state_showphoto=state_show_photo, state_filter=state_filter_photo, state_printing=state_printing)
 
-    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=PHOTO_COUNTDOWN)
+    state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=cfg['photo_countdown'])
 
-    state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=SLIDE_SHOW_TIMEOUT)
+    state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=cfg['slide_show_timeout'])
 
     state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo,
                                                                   admin_state=state_admin, timeout_state=state_timeout_slide_show,
-                                                                  counter=PHOTO_TIMEOUT)
+                                                                  counter=cfg['photo_timeout'])
 
     state_printing.next_state = state_waiting_for_photo_trigger
     state_timeout_slide_show.next_state = state_waiting_for_photo_trigger
