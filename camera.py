@@ -170,13 +170,14 @@ class GPhoto2cffiCamera(AbstractCamera):
 
     def set_memory_capture(self):
         # set capturetarget to memory card
-        self.cam.config['main']['settings']['capturetarget'].set('Memory card')
+        self.cam.config['settings']['capturetarget'].set('Memory card')
 
     def set_idle(self):
         self.disable_liveview()
 
     def disable_liveview(self):
-        self.cam.config['main']['actions']['viewfinder'].set(0)
+        #self.cam.config['actions']['viewfinder'].set(False)
+        pass
 
     def get_preview(self):
         file = self._tmp_directory +'/preview.jpg'
@@ -186,10 +187,10 @@ class GPhoto2cffiCamera(AbstractCamera):
         return picture
 
     def enable_live_autofocus(self):
-        self.cam.config['main']['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
+        self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
 
     def disable_live_autofocus(self):
-        self.cam.config['main']['capturesettings']['liveviewaffocus'].set('Single-servo AF')
+        self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
 
     def take_photo(self):
         """
