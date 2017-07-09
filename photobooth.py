@@ -606,13 +606,7 @@ class StateFilter(PhotoBoothState):
 
         if self.photobooth.io_manager.accept_button_pressed():
 
-            # create final file name
-            path, ext = os.path.splitext(self.photobooth.last_photo[1])
-
-            filter_file = path + '_filtered' + ext
-            draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
-            # redo filtering on full image resolution
-            self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo, idx=self._current_filter_idx, dest=filter_file)
+            self.filter_selected_photo()
 
             self.switch_next()
             return
@@ -620,6 +614,15 @@ class StateFilter(PhotoBoothState):
         draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
+
+    def filter_selected_photo(self):
+        # create final file name
+        path, ext = os.path.splitext(self.photobooth.last_photo[1])
+        filter_file = path + '_filtered' + ext
+        draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
+        # redo filtering on full image resolution
+        self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo,
+                                                                idx=self._current_filter_idx, dest=filter_file)
 
     def reset(self):
         super(StateFilter, self).reset()
