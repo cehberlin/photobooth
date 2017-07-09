@@ -74,6 +74,8 @@ def show_cam_picture(screen, picture, fullscreen=True):
         img = pygame.transform.scale(picture, screen.get_size())
     else:
         img = picture
+
+    img = pygame.transform.flip(img,True,False)
     screen.blit(img, (0, 0))
 
 def get_text_img(text, size, color):
