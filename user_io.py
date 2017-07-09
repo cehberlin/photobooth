@@ -243,13 +243,13 @@ if found_rpi_module:
             Check if any button was pressed
             :return: true if a button was pressed since last call
             """
+            return True
+            #result = False
+            #for key, button in ButtonRail.push_buttons.iteritems():
+            #    if button.was_pressed(reset=reset):
+            #        result = True                    
 
-            result = False
-            for key, button in ButtonRail.push_buttons.iteritems():
-                if button.was_pressed(reset=reset):
-                    result = True                    
-
-            return result
+            #return result
 
         def button_idx_pressed(self, idx):
             if idx == 0:
@@ -262,7 +262,8 @@ if found_rpi_module:
                 return self.push_buttons[LedType.GREEN].was_pressed(reset=True)
 
         def accept_button_pressed(self, reset = True):
-            return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)
+            #return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)
+            return True
 
         def cancel_button_pressed(self, reset = True):
             return self.push_buttons[LedType.RED].was_pressed(reset=reset)

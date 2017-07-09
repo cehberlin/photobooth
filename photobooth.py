@@ -17,6 +17,7 @@ from camera import get_camera_factory
 from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
 import print_utils
 import storage
+from mem_top import mem_top
 
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
@@ -456,7 +457,9 @@ class StatePrinting(PhotoBoothState):
 
         draw_text_box(screen=self.photobooth.screen, text=_("Print photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None, self.photobooth.app_resolution[1] - 60))
-
+     
+    def reset(self):
+        super(StatePrinting, self).reset()
 
 class StateFilter(PhotoBoothState):
     """
@@ -607,7 +610,7 @@ class StateFilter(PhotoBoothState):
         if self.photobooth.io_manager.accept_button_pressed():
 
             self.filter_selected_photo()
-
+            print(mem_top())
             self.switch_next()
             return
 
@@ -933,7 +936,7 @@ if __name__ == '__main__':
     state_trigger_photo.enabled = True
     state_admin.enabled = True
     state_timeout_slide_show.enabled = True
-    state_printing.enabled = True
+    state_printing.enabled = False
     state_show_photo.enabled = True
     state_filter_photo.enabled = True
 
