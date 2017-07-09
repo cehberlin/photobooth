@@ -32,6 +32,10 @@ class AbstractUserIo(object):
         raise NotImplementedError
 
     @abstractmethod
+    def reset_button_states(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def any_button_pressed(self, reset = False):
         raise NotImplementedError
 
@@ -100,6 +104,9 @@ class PyGameUserIo(AbstractUserIo):
         pass
 
     def update(self):
+        pass
+
+    def reset_button_states(self):
         pass
 
     def accept_button_pressed(self, reset = True):
@@ -226,6 +233,10 @@ if found_rpi_module:
 
         def update(self):
             pass
+
+        def reset_button_states(self):
+            for _, button in ButtonRail.push_buttons.iteritems():
+                button.reset_button_state()
         
         def any_button_pressed(self, reset = False):
             """

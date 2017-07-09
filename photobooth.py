@@ -50,6 +50,7 @@ class PhotoBoothState(object):
     def reset(self):
         self.counter = self.inital_counter
         self.counter_last_update_time = time.time()
+        self.photobooth.io_manager.reset_button_states()
 
     def set_counter(self, value):
         self.counter_last_update_time = time.time()
