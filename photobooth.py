@@ -937,11 +937,13 @@ if __name__ == '__main__':
     #initial app state
     app.state = state_waiting_for_camera
 
+    clock = pygame.time.Clock()
 
     # Main program loop
     while not app.event_manager.quit_pressed():
-        
+
         try:
+            clock.tick(30)
             app.update()
 
         except Exception as e:
