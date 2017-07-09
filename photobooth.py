@@ -263,7 +263,10 @@ class StateShowSlideShow(PhotoBoothState):
         super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
         self._photo_set = []
         self.current_photo = None
-        self._logo_img = pygame.image.load('res/logo.png')
+
+        logo = self.photobooth.config['logo']
+        if logo:
+            self._logo_img = pygame.image.load(logo)
 
     def update_callback(self):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
