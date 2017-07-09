@@ -705,19 +705,31 @@ class StateAdmin(PhotoBoothState):
         Determine free space in current directory
         :return: free space in MB
         """
-        st = os.statvfs(self.photobooth.photo_directory)
-        free_mb = st.f_bsize * st.f_bavail // 1024 // 1024
+        free_mb = 0
+
+        try:
+            st = os.statvfs(self.photobooth.photo_directory)
+            free_mb = st.f_bsize * st.f_bavail // 1024 // 1024
+        except:
+            print(traceback.format_exc())
+
         return free_mb
 
     def get_ip_address(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
+        socket_name = _("WiFi not found")
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            socket_name = s.getsockname()[0]
+
+        except:
+            print(traceback.format_exc())
+
+        return socket_name
 
     def get_network_name(self):
 
         ssid = _("WiFi not found")
-
         try:
             scanoutput = check_output(["iwconfig", "wlan0"])
             for line in scanoutput.split():
