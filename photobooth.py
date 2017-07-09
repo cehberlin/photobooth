@@ -936,7 +936,6 @@ if __name__ == '__main__':
     state_printing.enabled = True
     state_show_photo.enabled = True
     state_filter_photo.enabled = True
-    state_printing.enabled = True
 
     #initial app state
     app.state = state_waiting_for_camera
