@@ -17,7 +17,6 @@ from camera import get_camera_factory
 from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
 import print_utils
 import storage
-from mem_top import mem_top
 
 #Visual Configuration
 DEFAULT_RESOLUTION = [640,424]
@@ -610,7 +609,6 @@ class StateFilter(PhotoBoothState):
         if self.photobooth.io_manager.accept_button_pressed():
 
             self.filter_selected_photo()
-            print(mem_top())
             self.switch_next()
             return
 
@@ -935,10 +933,10 @@ if __name__ == '__main__':
     state_waiting_for_photo_trigger.enabled = True
     state_trigger_photo.enabled = True
     state_admin.enabled = True
-    state_timeout_slide_show.enabled = True
-    state_printing.enabled = False
-    state_show_photo.enabled = True
-    state_filter_photo.enabled = True
+    state_timeout_slide_show.enabled = cfg['state_slide_show_enabled']
+    state_printing.enabled = cfg['state_printing_enabled']
+    state_show_photo.enabled = cfg['state_show_photo_enabled']
+    state_filter_photo.enabled = cfg['state_filter_enabled']
 
     #initial app state
     app.state = state_waiting_for_camera
