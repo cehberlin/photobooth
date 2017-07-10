@@ -733,7 +733,7 @@ class StateAdmin(PhotoBoothState):
             socket_name = s.getsockname()[0]
 
         except:
-            print(traceback.format_exc())
+            print(_("WiFi not found"))
 
         return socket_name
 
@@ -747,7 +747,7 @@ class StateAdmin(PhotoBoothState):
                 if line[:5] == "ESSID":
                     ssid = line.split('"')[1]
         except:
-            print(traceback.format_exc())
+            print(_("WiFi not found"))
 
         return ssid
 
