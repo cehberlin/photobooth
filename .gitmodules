@@ -1,0 +1,3 @@
+[submodule "piggyphoto"]
+	path = piggyphoto
+	url = https://github.com/cehberlin/piggyphoto.git
