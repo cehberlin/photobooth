@@ -1,4 +1,4 @@
-import piggyphoto
+import piggyphoto.piggyphoto as piggyphoto
 import pygame
 import imp
 
@@ -89,41 +89,36 @@ class PiggyphotoCamera(AbstractCamera):
         :param photobooth: app instance
         :param kwargs:
         """
-        self.cam = None
-        self.cam = piggyphoto.camera()
+        self.cam = piggyphoto.Camera(auto_init=True)
         self._photo_directory = photo_directory
         self._tmp_directory = tmp_directory
-        #self.cam.leave_locked() # TODO not sure what would be the effect
 
     def set_memory_capture(self):
         # set capturetarget to memory card
-        cam_config = self.cam.config
-        cam_config['main']['settings']['capturetarget'].value = 'Memory card'
-        self.cam.config = cam_config
+        config_value = self.cam.config.get_child_by_name("capturetarget")
+        config_value.value = 'Memory card'
 
     def set_idle(self):
         self.disable_liveview()
 
     def disable_liveview(self):
-        cam_config = self.cam.config
-        cam_config['main']['actions']['viewfinder'].value = 0
-        self.cam.config = cam_config
+        config_value = self.cam.config.get_child_by_name("viewfinder")
+        config_value.value = 0
 
     def get_preview(self):
         file = self._tmp_directory +'/preview.jpg'
-        self.cam.capture_preview(destpath=file)
+        cfile = self.cam.capture_preview(destpath=file)
+        cfile.clean()
         picture = pygame.image.load(file)
         return picture
 
     def enable_live_autofocus(self):
-        cam_config = self.cam.config
-        cam_config['main']['capturesettings']['liveviewaffocus'].value = 'Full-time-servo AF'
-        self.cam.config = cam_config
+        config_value = self.cam.config.get_child_by_name("liveviewaffocus")
+        config_value.value = 'Full-time-servo AF'
 
     def disable_live_autofocus(self):
-        cam_config = self.cam.config
-        cam_config['main']['capturesettings']['liveviewaffocus'].value = 'Single-servo AF'
-        self.cam.config = cam_config
+        config_value = self.cam.config.get_child_by_name("liveviewaffocus")
+        config_value.value = 'Single-servo AF'
 
     def take_photo(self):
         """
@@ -140,7 +135,7 @@ class PiggyphotoCamera(AbstractCamera):
     def close(self):
         if self.cam:
             self.set_idle()
-            self.cam.exit()
+            self.cam.close()
             self.cam = None
 
     def __del__(self):
@@ -265,3 +260,10 @@ class DummyCamera(AbstractCamera):
         pass
 
 camera_factory.register_algorithm("dummy", DummyCamera)
+
+if __name__ == '__main__':
+
+    cam = PiggyphotoCamera('images', 'tmp')
+
+    while True:
+        photo = cam.get_preview()
