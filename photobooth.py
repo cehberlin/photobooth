@@ -139,7 +139,7 @@ class PhotoBooth(object):
 
         self.io_manager = get_user_io_factory().create_algorithm(id_class=config['io_manager'], photobooth=self)
 
-        self.change_photo_dir(config['photo_directory'])
+        self.change_photo_dir(new_directory=config['photo_directory'], reinit_camera=False)
 
     def set_fullscreen(self, fullscreen):
         if fullscreen:
@@ -154,14 +154,14 @@ class PhotoBooth(object):
 
         self.app_resolution = self.screen.get_size()
 
-    def change_photo_dir(self, new_directory):
+    def change_photo_dir(self, new_directory, reinit_camera=True):
 
         self.photo_directory = new_directory
         # create photo directory if necessary
         if not os.path.exists(self.photo_directory):
             os.makedirs(self.photo_directory)
-
-        self.init_camera()
+        if reinit_camera:
+            self.init_camera()
 
     def init_camera(self):
         if self.cam:
