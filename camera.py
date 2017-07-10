@@ -1,6 +1,6 @@
 import piggyphoto
-import gphoto2cffi as gp
 import pygame
+import imp
 
 from utils import GenericClassFactory
 from shutil import copy
@@ -148,69 +148,80 @@ class PiggyphotoCamera(AbstractCamera):
 
 camera_factory.register_algorithm("piggyphoto", PiggyphotoCamera)
 
-class GPhoto2cffiCamera(AbstractCamera):
-    """
-    Class wrapping camera access through gphoto2cffi library for Nikon DSLR, you probably have to adjust it
-    for other camera brands
-    """
+#following implementation is optional and only acivated if requirements are fulfilled
+try:
+    imp.find_module('gphoto2cffi')
+    found_gphoto2_cffi_module = True
+except ImportError:
+    found_gphoto2_cffi_module = False
+    print("Couldn't find gphoto2cffi module, proceeding without")
 
-    def __init__(self,  photo_directory, tmp_directory, **kwargs):
+if found_gphoto2_cffi_module:
+    import gphoto2cffi as gp
+
+    class GPhoto2cffiCamera(AbstractCamera):
         """
-        :param photobooth: app instance
-        :param kwargs:
+        Class wrapping camera access through gphoto2cffi library for Nikon DSLR, you probably have to adjust it
+        for other camera brands
         """
-        self.cam = gp.Camera()
-        self._photo_directory = photo_directory
-        self._tmp_directory = tmp_directory
 
-    def _save_picture(self, filename, data):
-        f = open(filename, 'wb')
-        f.write(data)
-        f.close()
+        def __init__(self,  photo_directory, tmp_directory, **kwargs):
+            """
+            :param photobooth: app instance
+            :param kwargs:
+            """
+            self.cam = gp.Camera()
+            self._photo_directory = photo_directory
+            self._tmp_directory = tmp_directory
 
-    def set_memory_capture(self):
-        # set capturetarget to memory card
-        self.cam.config['settings']['capturetarget'].set('Memory card')
+        def _save_picture(self, filename, data):
+            f = open(filename, 'wb')
+            f.write(data)
+            f.close()
 
-    def set_idle(self):
-        self.disable_liveview()
+        def set_memory_capture(self):
+            # set capturetarget to memory card
+            self.cam.config['settings']['capturetarget'].set('Memory card')
 
-    def disable_liveview(self):
-        #self.cam.config['actions']['viewfinder'].set(False)
-        pass
+        def set_idle(self):
+            self.disable_liveview()
 
-    def get_preview(self):
-        file = self._tmp_directory +'/preview.jpg'
-        preview = self.cam.get_preview()
-        self._save_picture(filename=file, data=preview)
-        picture = pygame.image.load(file)
-        return picture
+        def disable_liveview(self):
+            #self.cam.config['actions']['viewfinder'].set(False)
+            pass
 
-    def enable_live_autofocus(self):
-        self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
+        def get_preview(self):
+            file = self._tmp_directory +'/preview.jpg'
+            preview = self.cam.get_preview()
+            self._save_picture(filename=file, data=preview)
+            picture = pygame.image.load(file)
+            return picture
 
-    def disable_live_autofocus(self):
-        self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
+        def enable_live_autofocus(self):
+            self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
 
-    def take_photo(self):
-        """
-        Trigger photo capture
-        :return:  tuple of pygame image and path to file
-        """
-        #disable liveview to use better internal autofocus of camera
-        self.disable_liveview()
-        file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
-        photo = self.cam.capture()
-        self._save_picture(filename=file, data=photo)
-        return pygame.image.load(file), file
+        def disable_live_autofocus(self):
+            self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
 
-    def close(self):
-        pass
+        def take_photo(self):
+            """
+            Trigger photo capture
+            :return:  tuple of pygame image and path to file
+            """
+            #disable liveview to use better internal autofocus of camera
+            self.disable_liveview()
+            file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
+            photo = self.cam.capture()
+            self._save_picture(filename=file, data=photo)
+            return pygame.image.load(file), file
 
-    def __del__(self):
-        self.close()
+        def close(self):
+            pass
 
-camera_factory.register_algorithm("gphoto2cffi", GPhoto2cffiCamera)
+        def __del__(self):
+            self.close()
+
+    camera_factory.register_algorithm("gphoto2cffi", GPhoto2cffiCamera)
 
 class DummyCamera(AbstractCamera):
     """
