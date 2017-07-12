@@ -154,7 +154,7 @@ except ImportError:
 if found_gphoto2_cffi_module:
     import gphoto2cffi as gp
 
-    class GPhoto2cffiCamera(AbstractCamera):
+    class GPhoto2CffiCamera(AbstractCamera):
         """
         Class wrapping camera access through gphoto2cffi library for Nikon DSLR, you probably have to adjust it
         for other camera brands
@@ -182,8 +182,10 @@ if found_gphoto2_cffi_module:
             self.disable_liveview()
 
         def disable_liveview(self):
-            #self.cam.config['actions']['viewfinder'].set(False)
-            pass
+            try:
+                self.cam.config['actions']['viewfinder'].set(False)
+            except:
+                print("disable liveview failed")
 
         def get_preview(self):
             file = self._tmp_directory +'/preview.jpg'
@@ -193,10 +195,18 @@ if found_gphoto2_cffi_module:
             return picture
 
         def enable_live_autofocus(self):
-            self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
+            return
+            try:
+                self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
+            except:
+                print('could not change liveview AF settings, please enable AF on lens')
 
         def disable_live_autofocus(self):
-            self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
+            return
+            try:
+                self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
+            except:
+                print('could not change liveview AF settings, please enable AF on lens')
 
         def take_photo(self):
             """
@@ -216,7 +226,7 @@ if found_gphoto2_cffi_module:
         def __del__(self):
             self.close()
 
-    camera_factory.register_algorithm("gphoto2cffi", GPhoto2cffiCamera)
+    camera_factory.register_algorithm("gphoto2cffi", GPhoto2CffiCamera)
 
 class DummyCamera(AbstractCamera):
     """
@@ -263,7 +273,7 @@ camera_factory.register_algorithm("dummy", DummyCamera)
 
 if __name__ == '__main__':
 
-    cam = PiggyphotoCamera('images', 'tmp')
+    cam = GPhoto2CffiCamera('images', 'tmp')
 
     while True:
-        photo = cam.get_preview()
+        photo = cam.take_photo()
