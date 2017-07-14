@@ -275,6 +275,11 @@ camera_factory.register_algorithm("dummy", DummyCamera)
 if __name__ == '__main__':
 
     cam = GPhoto2CffiCamera('images', 'tmp')
+    #cam = PiggyphotoCamera('images', 'tmp')
 
+    cnt = 0
     while True:
         photo = cam.take_photo()
+        preview = cam.get_preview()
+        cnt +=1
+	print(cnt)
