@@ -470,7 +470,7 @@ class StateFilter(PhotoBoothState):
 
         self.filter_photos = []
         self._picture_size = ()
-        self._current_filter_idx = 0
+        self._current_filter_idx = 1
         self._filter_count = 4
 
     def filter_photo_fullsize(self, photo, idx, dest):
@@ -630,7 +630,7 @@ class StateFilter(PhotoBoothState):
         super(StateFilter, self).reset()
 
         draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
-        self._current_filter_idx = 0
+        self._current_filter_idx = 1
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
