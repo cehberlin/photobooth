@@ -89,6 +89,7 @@ class PiggyphotoCamera(AbstractCamera):
         :param photobooth: app instance
         :param kwargs:
         """
+        self.cam = None
         self.cam = piggyphoto.Camera(auto_init=True)
         self._photo_directory = photo_directory
         self._tmp_directory = tmp_directory
