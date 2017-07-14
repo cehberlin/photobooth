@@ -152,6 +152,51 @@ class PyGameUserIo(AbstractUserIo):
 #Register the PyGameUserIo implementation
 user_io_factory.register_algorithm(id_class='pygame', class_obj=PyGameUserIo)
 
+class TestUserIo(AbstractUserIo):
+    """
+    This dummy class allows to automatically cycle through the application process without user input
+    """
+    def __init__(self, **kwargs):
+        pass
+
+    def update(self):
+        pass
+
+    def reset_button_states(self):
+        pass
+
+    def accept_button_pressed(self, reset = True):
+        return True
+
+    def cancel_button_pressed(self, reset = True):
+        return False
+
+    def admin_button_pressed(self, reset = False):
+        return False
+
+    def next_button_pressed(self, reset = True):
+        return False
+
+    def prev_button_pressed(self, reset = True):
+        return False
+
+    def button_idx_pressed(self, idx):
+        return False
+
+    def any_button_pressed(self, reset = False):
+        return True
+
+    def set_led(self, led_type, led_state):
+        pass
+    def set_all_led(self, led_state):
+        pass
+
+    def show_led_coutdown(self, counter):
+        pass
+
+#Register the PyGameUserIo implementation
+user_io_factory.register_algorithm(id_class='test', class_obj=TestUserIo)
+
 #following implementation is only activated if RPi (probably on a raspberry pi is available
 try:
     imp.find_module('RPi')
@@ -243,13 +288,12 @@ if found_rpi_module:
             Check if any button was pressed
             :return: true if a button was pressed since last call
             """
-            return True
-            #result = False
-            #for key, button in ButtonRail.push_buttons.iteritems():
-            #    if button.was_pressed(reset=reset):
-            #        result = True                    
+            result = False
+            for key, button in ButtonRail.push_buttons.iteritems():
+               if button.was_pressed(reset=reset):
+                   result = True
 
-            #return result
+            return result
 
         def button_idx_pressed(self, idx):
             if idx == 0:
@@ -262,8 +306,7 @@ if found_rpi_module:
                 return self.push_buttons[LedType.GREEN].was_pressed(reset=True)
 
         def accept_button_pressed(self, reset = True):
-            #return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)
-            return True
+            return self.push_buttons[LedType.GREEN].was_pressed(reset=reset)
 
         def cancel_button_pressed(self, reset = True):
             return self.push_buttons[LedType.RED].was_pressed(reset=reset)
