@@ -253,6 +253,7 @@ class StateWaitingForCamera(PhotoBoothState):
             pos = get_text_mid_position(self.photobooth.app_resolution)
             show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e), pos,
                            size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            print(str(e))
             time.sleep(1)
 
 
