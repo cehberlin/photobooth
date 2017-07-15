@@ -664,6 +664,7 @@ class StateAdmin(PhotoBoothState):
             (_("Enable/Disable state Printing"), self.toggle_state_printing),
             (_("Close photobooth"), self.photobooth.close),
             (_("Shutdown all"), self.shutdown_all),
+            (_("Shutdown photobooth"), self.shutdown_phootbooth),
             (_("Start printer"), self.start_printer),
             (_("Stop printer"), self.stop_printer),
             (_("Mount/Umount USB storage"), self.toggle_usb_storage),
@@ -852,10 +853,13 @@ class StateAdmin(PhotoBoothState):
 
     def stop_printer(self):
         print_utils.stop_printer()
+        
+    def shutdown_phootbooth(self):
+    	os.system('systemctl poweroff')
 
     def shutdown_all(self):
-        print_utils.stop_printer()
-        os.system('systemctl poweroff')
+        self.stop_printer()
+        self.shutdown_phootbooth()
 
     def reset(self):
         super(StateAdmin, self).reset()
