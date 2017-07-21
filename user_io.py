@@ -211,7 +211,6 @@ if found_rpi_module:
 
     GPIO.setmode(GPIO.BCM)
 
-
     class RaspiPushButton(object):
 
         def __init__(self, color, button_pin, led_pin):
@@ -228,16 +227,14 @@ if found_rpi_module:
 
             GPIO.output(self.led_pin, GPIO.LOW)
 
-            GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self._press_callback, bouncetime=300)
-            
+            GPIO.add_event_detect(self.button_pin, GPIO.RISING, callback=self._release_callback, bouncetime=300)
+
         def __del__(self):
             GPIO.cleanup(self.button_pin)
             GPIO.cleanup(self.led_pin)
 
-        def _press_callback(self, channel):
-
+        def _release_callback(self, channel):
             self.button_event_state = ButtonState.BUTTON_PRESSED
-            #print('_press_callback', self.color)
 
         def is_pressed(self):
             return GPIO.input(self.button_pin) == GPIO.LOW
@@ -282,7 +279,7 @@ if found_rpi_module:
         def reset_button_states(self):
             for _, button in ButtonRail.push_buttons.iteritems():
                 button.reset_button_state()
-        
+
         def any_button_pressed(self, reset = False):
             """
             Check if any button was pressed
