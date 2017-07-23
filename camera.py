@@ -293,7 +293,8 @@ class GPhotoCMDCamera(AbstractCamera):
 
     def set_memory_capture(self):
         # set capturetarget to memory card
-        self._set_config('/main/settings/capturetarget', 'Memory card')
+        # self._set_config('/main/settings/capturetarget', 'Memory card')
+        self._set_config_by_index('/main/settings/capturetarget', 1)
 
     def set_idle(self):
         self._disable_shell()
@@ -324,10 +325,12 @@ class GPhotoCMDCamera(AbstractCamera):
         return preview_picture
 
     def enable_live_autofocus(self):
-        self._set_config('/main/capturesettings/liveviewaffocus', 'Full-time-servo AF')
+        # self._set_config('/main/capturesettings/liveviewaffocus', 'Full-time-servo AF')
+        self._set_config_by_index('/main/capturesettings/liveviewaffocus', 1)
 
     def disable_live_autofocus(self):
-        self._set_config('/main/capturesettings/liveviewaffocus', 'Single-servo AF')
+        # self._set_config('/main/capturesettings/liveviewaffocus', 'Single-servo AF')
+        self._set_config_by_index('/main/capturesettings/liveviewaffocus', 0)
 
     def take_photo(self):
         """
@@ -342,6 +345,23 @@ class GPhotoCMDCamera(AbstractCamera):
         self._execute_process(command)
 
         return pygame.image.load(file), file
+
+    def _set_config_by_index(self, key, value):
+        """
+        set a gphoto2 config value using the option index in order to avoid language problems
+        function automatically handles non-shell and shell mode
+        :param key: config key
+        :param value: config value
+        """
+        value = int(value)
+
+        if not self._shell_p:
+            command = "gphoto2 --set-config-index {key}={value}".format(key=key, value=value)
+            self._execute_process(command)
+        else:
+
+            command = "set-config-index {key}={value}".format(key=key, value=value)
+            self._input_shell(command)
 
     def _set_config(self, key, value):
         """
