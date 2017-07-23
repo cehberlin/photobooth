@@ -264,7 +264,7 @@ class StateShowSlideShow(PhotoBoothState):
     def __init__(self, photobooth, next_state, counter):
         super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
         self._photo_set = []
-        self.current_photo = None
+        self.current_photo = None, None
 
         logo = self.photobooth.config['logo']
         if logo:
@@ -276,8 +276,8 @@ class StateShowSlideShow(PhotoBoothState):
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
 
-        if self.current_photo:
-            show_cam_picture(self.photobooth.screen, self.current_photo)
+        if self.current_photo[0]:
+            show_cam_picture(self.photobooth.screen, self.current_photo[0])
             if self._logo_img:
                 self.draw_logo(self._logo_img)
 
@@ -295,7 +295,7 @@ class StateShowSlideShow(PhotoBoothState):
         if len(self._photo_set) > 0:
             photo_file = random.choice(self._photo_set)
             print("Next photo: " + photo_file)
-            self.current_photo =  pygame.image.load(photo_file)
+            self.current_photo =  pygame.image.load(photo_file), photo_file
             super(StateShowSlideShow, self).reset()  # reset counter
         else:
             self._reload_photo_set() # check for new photos
@@ -311,6 +311,39 @@ class StateShowSlideShow(PhotoBoothState):
         self._reload_photo_set()
         self._next_photo()
         print("Loading Slideshow images")
+
+class StateAdvancedSlideShow(StateShowSlideShow):
+
+    def __init__(self, photobooth, next_state, counter, print_state):
+        super(StateAdvancedSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter)
+        self.last_photo = None
+        self.print_state = print_state
+
+    def update_callback(self):
+
+        if self.current_photo[0]:
+            show_cam_picture(self.photobooth.screen, self.current_photo[0])
+            if self._logo_img:
+                self.draw_logo(self._logo_img)
+
+        self.photobooth.io_manager.show_led_coutdown(self.counter)
+
+        if self.photobooth.io_manager.next_button_pressed():
+            self.last_photo = self.current_photo
+            self._next_photo()
+        elif self.photobooth.io_manager.prev_button_pressed():
+            if self.last_photo:
+                self.current_photo = self.last_photo
+        if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.cancel_button_pressed(reset=True):
+            self.switch_next()
+        if self.photobooth.io_manager.accept_button_pressed():
+            self.photobooth.last_photo = self.current_photo
+            self.switch_state(self.print_state)
+
+        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow"), pos=(80, 80), size=INFO_FONT_SIZE)
+
+        draw_button_bar(self.photobooth.screen, text=[_("Return"), _("Prev"), _("Next"), _("Print")],
+                        pos=(None, self.photobooth.app_resolution[1] - 60))
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
@@ -494,8 +527,8 @@ class StateFilter(PhotoBoothState):
         """
         filter_file = dest
 
-        width = photo[0].get_size()[0]
-        height =photo[0].get_size()[1]
+        width  = photo[0].get_size()[0]
+        height = photo[0].get_size()[1]
 
         if self.apply_photo_filter(input_file=photo[1], idx=idx, output_file=dest, width=width, height=height):
 
@@ -925,7 +958,11 @@ if __name__ == '__main__':
 
     state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=cfg['photo_countdown'])
 
-    state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None, counter=cfg['slide_show_timeout'])
+    if cfg['slide_show_advanced'] is True:
+        state_timeout_slide_show = StateAdvancedSlideShow(photobooth=app, next_state=None, counter=cfg['slide_show_timeout'], print_state=state_printing)
+    else:
+        state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None,
+                                                      counter=cfg['slide_show_timeout'])
 
     state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo,
                                                                   admin_state=state_admin, timeout_state=state_timeout_slide_show,
