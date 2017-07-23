@@ -330,7 +330,11 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
                 self.photobooth.state = self.admin_state
         elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
-        preview_img = self.photobooth.cam.get_preview()
+        preview_img = None
+        try:
+            preview_img = self.photobooth.cam.get_preview()
+        except:
+            pass
         if preview_img:
             show_cam_picture(self.photobooth.screen, preview_img)
 
@@ -367,7 +371,11 @@ class StatePhotoTrigger(PhotoBoothState):
             self.photobooth.cam.disable_live_autofocus()
             self.show_final_view()
         else:
-            preview_img = self.photobooth.cam.get_preview()
+            preview_img = None
+            try:
+                preview_img = self.photobooth.cam.get_preview()
+            except:
+                pass
             if preview_img:
                 show_cam_picture(self.photobooth.screen, preview_img)
                 self._last_preview = preview_img
