@@ -23,6 +23,7 @@ DEFAULT_RESOLUTION = [640,424]
 
 COUNTER_FONT_SIZE = 140
 INFO_FONT_SIZE = 36
+CAPTION_FONT_SIZE = 46
 INFO_SMALL_FONT_SIZE = 24
 INFO_TEXT_Y_POS = 100
 
@@ -340,7 +341,7 @@ class StateAdvancedSlideShow(StateShowSlideShow):
             self.photobooth.last_photo = self.current_photo
             self.switch_state(self.print_state)
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow"), pos=(80, 80), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow"), pos=(80, 80), size=CAPTION_FONT_SIZE)
 
         draw_button_bar(self.photobooth.screen, text=[_("Return"), _("Prev"), _("Next"), _("Print")],
                         pos=(None, self.photobooth.app_resolution[1] - 60))
