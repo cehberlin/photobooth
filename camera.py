@@ -415,6 +415,7 @@ class GPhotoCMDCamera(AbstractCamera):
         """
         if self._shell_p:
             self._shell_p.stdin.write('exit\n')
+            self._shell_p.wait()
             self._shell_p = None
 
     def _input_shell(self, cmd):
