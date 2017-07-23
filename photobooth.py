@@ -331,7 +331,8 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         elif self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.any_button_pressed(reset=True):
             self.switch_next()
         preview_img = self.photobooth.cam.get_preview()
-        show_cam_picture(self.photobooth.screen, preview_img)
+        if preview_img:
+            show_cam_picture(self.photobooth.screen, preview_img)
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
         self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
@@ -356,6 +357,7 @@ class StatePhotoTrigger(PhotoBoothState):
                                                 counter_callback=self._take_photo)
         self._arrow_img = pygame.image.load('res/arrow.png')
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution)
+        self._last_preview = None
 
     def update_callback(self):
 
@@ -366,8 +368,9 @@ class StatePhotoTrigger(PhotoBoothState):
             self.show_final_view()
         else:
             preview_img = self.photobooth.cam.get_preview()
-            show_cam_picture(self.photobooth.screen, preview_img)
-
+            if preview_img:
+                show_cam_picture(self.photobooth.screen, preview_img)
+                self._last_preview = preview_img
             # Show countdown
             show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
 
