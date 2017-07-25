@@ -199,15 +199,13 @@ if found_gphoto2_cffi_module:
             picture = pygame.image.load(file)
             return picture
 
-        def enable_live_autofocus(self):
-            return
+        def enable_live_autofocus(self):            
             try:
                 self.cam.config['capturesettings']['liveviewaffocus'].set('Full-time-servo AF')
             except:
                 print('could not change liveview AF settings, please enable AF on lens')
 
         def disable_live_autofocus(self):
-            return
             try:
                 self.cam.config['capturesettings']['liveviewaffocus'].set('Single-servo AF')
             except:
@@ -327,12 +325,18 @@ class GPhotoCMDCamera(AbstractCamera):
         return preview_picture
 
     def enable_live_autofocus(self):
-        # self._set_config('/main/capturesettings/liveviewaffocus', 'Full-time-servo AF')
-        self._set_config_by_index('/main/capturesettings/liveviewaffocus', 1)
+        try:
+            # self._set_config('/main/capturesettings/liveviewaffocus', 'Full-time-servo AF')
+            self._set_config_by_index('/main/capturesettings/liveviewaffocus', 1)
+        except:
+            print('could not change liveview AF settings, please enable AF on lens')
 
     def disable_live_autofocus(self):
-        # self._set_config('/main/capturesettings/liveviewaffocus', 'Single-servo AF')
-        self._set_config_by_index('/main/capturesettings/liveviewaffocus', 0)
+        try:
+            # self._set_config('/main/capturesettings/liveviewaffocus', 'Single-servo AF')
+            self._set_config_by_index('/main/capturesettings/liveviewaffocus', 0)
+        except:
+            print('could not change liveview AF settings, please enable AF on lens')
 
     def take_photo(self):
         """
@@ -408,7 +412,12 @@ class GPhotoCMDCamera(AbstractCamera):
         if self._shell_p:
             self._disable_shell()
 
-        self._shell_p = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE)
+        self._shell_p = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        print("Return code: " + str(self._shell_p.returncode))
+        #res = self._shell_p.stderr.readline()
+        #if 'Error' in res:
+        #    self._shell_p = None
+        #    raise Exception("Enabling shell mode failed: " + str(res))
 
     def _disable_shell(self):
         """
@@ -416,19 +425,28 @@ class GPhotoCMDCamera(AbstractCamera):
         check if it was started at all
         """
         if self._shell_p:
-            self._shell_p.stdin.write('exit\n')
-            self._shell_p.wait()
-            self._shell_p = None
+            try:
+                self._shell_p.stdin.write('exit\n')
+                self._shell_p.wait()
+                self._shell_p = None
+            except Exception as e:
+                print("Failed closing shell mode: "+ str(e))
 
     def _input_shell(self, cmd):
         """
         send a command to a running interactive gphoto shell
         :param cmd: the gphoto2 command
         """
-        if self._shell_p:
+        if self._shell_p and self._shell_p.returncode is None:
             self._shell_p.stdin.write(cmd + '\n')
+            self._shell_p.stdin.flush()
+            res = self._shell_p.stdout.readline()
+            if 'Error' in res:
+                self._disable_shell()
+                raise Exception("Shell cmd failed: " + res)
         else:
-            raise Exception("Gphoto2 shell mode was not started")
+            self._shell_p = None
+            raise Exception("Gphoto2 shell mode not running")
 
     def close(self):
         if self._shell_p:

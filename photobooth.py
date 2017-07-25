@@ -149,7 +149,10 @@ class PhotoBooth(object):
         else:
             if self.cam:
                 picture = self.cam.get_preview()
-                self.screen = pygame.display.set_mode(picture.get_size())
+                if picture:
+                    self.screen = pygame.display.set_mode(picture.get_size())
+                else:
+                    raise Exception("Failed to get camera preview")
             else:
                 self.screen = pygame.display.set_mode(DEFAULT_RESOLUTION)
 
@@ -252,7 +255,9 @@ class StateWaitingForCamera(PhotoBoothState):
             self.switch_next()
         except Exception as e:
             pos = get_text_mid_position(self.photobooth.app_resolution)
-            show_text_mid(self.photobooth.screen, _("Camera not connected: ") + str(e), pos,
+            show_text_mid(self.photobooth.screen, _("Camera not connected:"), pos,
+                           size=INFO_FONT_SIZE, color=COLOR_ORANGE)
+            show_text_mid(self.photobooth.screen, str(e), (pos[0],pos[1]+40),
                            size=INFO_FONT_SIZE, color=COLOR_ORANGE)
             print(str(e))
             time.sleep(1)
@@ -357,6 +362,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
                                                           counter_callback=self._switch_timeout_state)
         self.timeout_state = timeout_state
         self.admin_state = admin_state
+        self._preview_failure_cnt = 0
 
     def update_callback(self):
         if self.photobooth.io_manager.admin_button_pressed():
@@ -368,9 +374,12 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         try:
             preview_img = self.photobooth.cam.get_preview()
         except:
-            pass
+            self._preview_failure_cnt += 1
         if preview_img:
             show_cam_picture(self.photobooth.screen, preview_img)
+            self._preview_failure_cnt = 0
+        elif self._preview_failure_cnt > 30:
+            raise Exception("Preview failed")
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
         self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
@@ -384,6 +393,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
     def reset(self):
         super(StateWaitingForPhotoTrigger, self).reset()
         self.photobooth.io_manager.set_all_led(LedState.ON)
+        self._preview_failure_cnt = 0
 
 class StatePhotoTrigger(PhotoBoothState):
     """
@@ -396,6 +406,7 @@ class StatePhotoTrigger(PhotoBoothState):
         self._arrow_img = pygame.image.load('res/arrow.png')
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution)
         self._last_preview = None
+        self._preview_failure_cnt = 0
 
     def update_callback(self):
 
@@ -409,10 +420,13 @@ class StatePhotoTrigger(PhotoBoothState):
             try:
                 preview_img = self.photobooth.cam.get_preview()
             except:
-                pass
+                self._preview_failure_cnt += 1
             if preview_img:
                 show_cam_picture(self.photobooth.screen, preview_img)
                 self._last_preview = preview_img
+                self._preview_failure_cnt = 0
+            elif self._preview_failure_cnt > 30:
+                raise Exception("Preview failed")
             # Show countdown
             show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
 
@@ -436,6 +450,7 @@ class StatePhotoTrigger(PhotoBoothState):
     def reset(self):
         super(StatePhotoTrigger, self).reset()
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution) # update in case resolution changed
+        self._preview_failure_cnt = 0
         if self.photobooth.cam:
             self.photobooth.cam.enable_live_autofocus()
         
@@ -960,14 +975,14 @@ if __name__ == '__main__':
     state_trigger_photo = StatePhotoTrigger(photobooth=app, next_state=state_show_photo, counter=cfg['photo_countdown'])
 
     if cfg['slide_show_advanced'] is True:
-        state_timeout_slide_show = StateAdvancedSlideShow(photobooth=app, next_state=None, counter=cfg['slide_show_timeout'], print_state=state_printing)
+        state_timeout_slide_show = StateAdvancedSlideShow(photobooth=app, next_state=None, counter=cfg['slide_show_next_photo_timeout'], print_state=state_printing)
     else:
         state_timeout_slide_show = StateShowSlideShow(photobooth=app, next_state=None,
-                                                      counter=cfg['slide_show_timeout'])
+                                                      counter=cfg['slide_show_next_photo_timeout'])
 
     state_waiting_for_photo_trigger = StateWaitingForPhotoTrigger(photobooth=app, next_state=state_trigger_photo,
                                                                   admin_state=state_admin, timeout_state=state_timeout_slide_show,
-                                                                  counter=cfg['photo_timeout'])
+                                                                  counter=cfg['slide_show_timeout'])
 
     state_printing.next_state = state_waiting_for_photo_trigger
     state_timeout_slide_show.next_state = state_waiting_for_photo_trigger
