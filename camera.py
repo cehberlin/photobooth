@@ -319,6 +319,8 @@ class GPhotoCMDCamera(AbstractCamera):
             self._input_shell(command)
             file = 'capture_preview.jpg'
             preview_picture = pygame.image.load(file)
+            if not preview_picture:
+                self._disable_shell()
         except:
             pass
 
