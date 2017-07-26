@@ -303,6 +303,8 @@ class StateShowSlideShow(PhotoBoothState):
 
     def _last_photo(self):
         if len(self._photo_set_already_shown) > 0:
+            if self.current_photo:
+                self._photo_set.append(self.current_photo[1])
             last = self._photo_set_already_shown[-1]
             self._photo_set_already_shown.remove(last)
             print("Next photo: " + last)
