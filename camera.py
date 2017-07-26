@@ -413,11 +413,6 @@ class GPhotoCMDCamera(AbstractCamera):
             self._disable_shell()
 
         self._shell_p = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        print("Return code: " + str(self._shell_p.returncode))
-        #res = self._shell_p.stderr.readline()
-        #if 'Error' in res:
-        #    self._shell_p = None
-        #    raise Exception("Enabling shell mode failed: " + str(res))
 
     def _disable_shell(self):
         """
@@ -437,7 +432,7 @@ class GPhotoCMDCamera(AbstractCamera):
         send a command to a running interactive gphoto shell
         :param cmd: the gphoto2 command
         """
-        if self._shell_p and self._shell_p.returncode is None:
+        if self._shell_p and self._shell_p.poll() is None:
             self._shell_p.stdin.write(cmd + '\n')
             self._shell_p.stdin.flush()
             res = self._shell_p.stdout.readline()
