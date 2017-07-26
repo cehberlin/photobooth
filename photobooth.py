@@ -268,9 +268,13 @@ class StateShowSlideShow(PhotoBoothState):
     State showing already taken photos in a random order slide show
     """
     def __init__(self, photobooth, next_state, counter):
-        super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self._next_photo)
+
         self._photo_set = []
+        self._photo_set_already_shown = []
         self.current_photo = None, None
+
+        super(StateShowSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter,
+                                                 counter_callback=self._next_photo)
 
         logo = self.photobooth.config['logo']
         if logo:
@@ -297,18 +301,36 @@ class StateShowSlideShow(PhotoBoothState):
         pos = (self.photobooth.app_resolution[0] - img_size[0] - offset, offset)
         self.photobooth.screen.blit(logo, pos)
 
+    def _last_photo(self):
+        if len(self._photo_set_already_shown) > 0:
+            last = self._photo_set_already_shown[-1]
+            self._photo_set_already_shown.remove(last)
+            print("Next photo: " + last)
+            print("Old ", self._photo_set_already_shown)
+            print("New ", self._photo_set)
+            self.current_photo = pygame.image.load(last), last
+            super(StateShowSlideShow, self).reset()  # reset counter
+
     def _next_photo(self):
+        #save already shown photos
+        if self.current_photo:
+            self._photo_set_already_shown.append(self.current_photo[1])
+
         if len(self._photo_set) > 0:
             photo_file = random.choice(self._photo_set)
+            self._photo_set.remove(photo_file)
             print("Next photo: " + photo_file)
+            print("Old ", self._photo_set_already_shown)
+            print("New ", self._photo_set)
             self.current_photo =  pygame.image.load(photo_file), photo_file
-            super(StateShowSlideShow, self).reset()  # reset counter
         else:
             self._reload_photo_set() # check for new photos
+        super(StateShowSlideShow, self).reset()  # reset counter
 
     def _reload_photo_set(self):
         # load all images from directory
         self._photo_set = glob.glob(self.photobooth.photo_directory + "/*.jpg")
+        self._photo_set_already_shown = []
 
     def reset(self):
         super(StateShowSlideShow, self).reset()
@@ -322,7 +344,6 @@ class StateAdvancedSlideShow(StateShowSlideShow):
 
     def __init__(self, photobooth, next_state, counter, print_state):
         super(StateAdvancedSlideShow, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter)
-        self.last_photo = None
         self.print_state = print_state
 
     def update_callback(self):
@@ -335,11 +356,9 @@ class StateAdvancedSlideShow(StateShowSlideShow):
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         if self.photobooth.io_manager.next_button_pressed():
-            self.last_photo = self.current_photo
             self._next_photo()
         elif self.photobooth.io_manager.prev_button_pressed():
-            if self.last_photo:
-                self.current_photo = self.last_photo
+            self._last_photo()
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.cancel_button_pressed(reset=True):
             self.switch_next()
         if self.photobooth.io_manager.accept_button_pressed():
