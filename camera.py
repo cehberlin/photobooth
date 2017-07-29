@@ -1,6 +1,9 @@
 import piggyphoto.piggyphoto as piggyphoto
 import pygame
+import time
 import imp
+from fcntl import fcntl, F_GETFL, F_SETFL
+from os import O_NONBLOCK, read
 
 import subprocess
 import shlex
@@ -319,7 +322,8 @@ class GPhotoCMDCamera(AbstractCamera):
             preview_picture = pygame.image.load(file)
             if not preview_picture:
                 self._disable_shell()
-        except:
+        except Exception as e :
+            print(e)
             pass
 
         return preview_picture
@@ -413,6 +417,13 @@ class GPhotoCMDCamera(AbstractCamera):
             self._disable_shell()
 
         self._shell_p = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        # set the O_NONBLOCK flag of p.stdout file descriptor:
+        flags = fcntl(self._shell_p.stdout, F_GETFL)  # get current p.stdout flags
+        fcntl(self._shell_p.stdout, F_SETFL, flags | O_NONBLOCK)
+        time.sleep(0.5)
+        if self._shell_p.poll():
+            raise Exception("Gphoto2 shell failed ")
+
 
     def _disable_shell(self):
         """
@@ -435,10 +446,17 @@ class GPhotoCMDCamera(AbstractCamera):
         if self._shell_p and self._shell_p.poll() is None:
             self._shell_p.stdin.write(cmd + '\n')
             self._shell_p.stdin.flush()
-            res = self._shell_p.stdout.readline()
-            if 'Error' in res:
-                self._disable_shell()
-                raise Exception("Shell cmd failed: " + res)
+            while True:
+                try:
+                    res = self._shell_p.stdout.readline()
+                except Exception as e:
+                    if e.errno == 11: # corresponds to "Resource temporarily unavailable" and indicates we do not have more data
+                        break
+                    else:
+                        raise e
+                if 'Error' in res: # this is unfortunately language specific
+                    self._disable_shell()
+                    raise Exception("Shell cmd failed: " + res)
         else:
             self._shell_p = None
             raise Exception("Gphoto2 shell mode not running")

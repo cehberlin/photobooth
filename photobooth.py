@@ -232,7 +232,7 @@ class PhotoBooth(object):
     def last_state(self):
         return self._last_state
 
-#State machine callback functions
+#State machine state classes
 
 class StateWaitingForCamera(PhotoBoothState):
     """
@@ -401,6 +401,8 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
             self._preview_failure_cnt = 0
         elif self._preview_failure_cnt > 30:
             raise Exception("Preview failed")
+        else:
+            self._preview_failure_cnt += 1
 
         draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
         self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
@@ -448,6 +450,8 @@ class StatePhotoTrigger(PhotoBoothState):
                 self._preview_failure_cnt = 0
             elif self._preview_failure_cnt > 30:
                 raise Exception("Preview failed")
+            else:
+                self._preview_failure_cnt += 1
             # Show countdown
             show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
 
@@ -1015,7 +1019,7 @@ if __name__ == '__main__':
     state_waiting_for_photo_trigger.failure_state = state_waiting_for_camera
     state_trigger_photo.failure_state = state_waiting_for_camera
     state_printing.failure_state = state_waiting_for_photo_trigger
-    state_filter_photo.failure_state = state_waiting_for_camera #state_waiting_for_photo_trigger
+    state_filter_photo.failure_state = state_waiting_for_camera
     state_show_photo.failure_state = state_waiting_for_photo_trigger
 
     #Enable the states we want to use
