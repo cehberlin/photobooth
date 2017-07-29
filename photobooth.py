@@ -438,8 +438,9 @@ class StatePhotoTrigger(PhotoBoothState):
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
         if self.counter == 1:
-            self.photobooth.cam.disable_live_autofocus()
             self.show_final_view()
+            pygame.display.update()
+            self.photobooth.cam.disable_live_autofocus()            
         else:
             preview_img = None
             try:
