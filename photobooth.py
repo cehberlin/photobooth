@@ -27,6 +27,8 @@ CAPTION_FONT_SIZE = 46
 INFO_SMALL_FONT_SIZE = 24
 INFO_TEXT_Y_POS = 100
 
+MAX_PREVIEW_FAILURE_CNT = 10
+
 
 def draw_wait_box(screen, text):
     draw_text_box(screen=screen, text=text, pos=(None, None),
@@ -399,7 +401,7 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         if preview_img:
             show_cam_picture(self.photobooth.screen, preview_img)
             self._preview_failure_cnt = 0
-        elif self._preview_failure_cnt > 30:
+        elif self._preview_failure_cnt > MAX_PREVIEW_FAILURE_CNT:
             raise Exception("Preview failed")
         else:
             self._preview_failure_cnt += 1
@@ -448,7 +450,7 @@ class StatePhotoTrigger(PhotoBoothState):
                 show_cam_picture(self.photobooth.screen, preview_img)
                 self._last_preview = preview_img
                 self._preview_failure_cnt = 0
-            elif self._preview_failure_cnt > 30:
+            elif self._preview_failure_cnt > MAX_PREVIEW_FAILURE_CNT:
                 raise Exception("Preview failed")
             else:
                 self._preview_failure_cnt += 1

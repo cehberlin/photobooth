@@ -418,8 +418,8 @@ class GPhotoCMDCamera(AbstractCamera):
 
         self._shell_p = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         # set the O_NONBLOCK flag of p.stdout file descriptor:
-        flags = fcntl(self._shell_p.stdout, F_GETFL)  # get current p.stdout flags
-        fcntl(self._shell_p.stdout, F_SETFL, flags | O_NONBLOCK)
+        flags = fcntl(self._shell_p.stderr, F_GETFL)  # get current p.stdout flags
+        fcntl(self._shell_p.stderr, F_SETFL, flags | O_NONBLOCK)
         time.sleep(0.5)
         if self._shell_p.poll():
             raise Exception("Gphoto2 shell failed ")
@@ -448,7 +448,7 @@ class GPhotoCMDCamera(AbstractCamera):
             self._shell_p.stdin.flush()
             while True:
                 try:
-                    res = self._shell_p.stdout.readline()
+                    res = self._shell_p.stderr.readline()
                 except Exception as e:
                     if e.errno == 11: # corresponds to "Resource temporarily unavailable" and indicates we do not have more data
                         break
