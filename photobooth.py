@@ -432,6 +432,7 @@ class StatePhotoTrigger(PhotoBoothState):
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution)
         self._last_preview = None
         self._preview_failure_cnt = 0
+        self._autofocus_enabled = True
 
     def update_callback(self):
 
@@ -440,7 +441,9 @@ class StatePhotoTrigger(PhotoBoothState):
         if self.counter == 1:
             self.show_final_view()
             pygame.display.update()
-            self.photobooth.cam.disable_live_autofocus()            
+            if self._autofocus_enabled:
+                self.photobooth.cam.disable_live_autofocus()
+                self._autofocus_enabled = False
         else:
             preview_img = None
             try:
@@ -458,9 +461,9 @@ class StatePhotoTrigger(PhotoBoothState):
             # Show countdown
             show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
 
-        #cancel photo if necessary
-        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
-                        pos=(None, self.photobooth.app_resolution[1] - 60))
+            #cancel photo if necessary
+            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
+                            pos=(None, self.photobooth.app_resolution[1] - 60))
         if self.photobooth.io_manager.cancel_button_pressed():
             self.photobooth.cam.disable_live_autofocus()
             self.switch_last()
@@ -480,6 +483,7 @@ class StatePhotoTrigger(PhotoBoothState):
         self._mid_position = get_text_mid_position(self.photobooth.app_resolution) # update in case resolution changed
         self._preview_failure_cnt = 0
         if self.photobooth.cam:
+            self._autofocus_enabled = True
             self.photobooth.cam.enable_live_autofocus()
         
     def _take_photo(self):
