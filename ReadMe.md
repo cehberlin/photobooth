@@ -16,9 +16,17 @@ This is a modular photobooth software written in Python using pygame, which is s
 - Support for different Gphoto2 interfaces (gphoto2-cffi, piggyphoto, commandline-based)
 - Modes for testing and development that can be used without any camera or buttons
 
+# Requirements and Hints
+- Gphoto2 interface is localized in some parts and this has influence on the name of some configuration options etc. This software expects an English interface, hence you should set your Photobooth Linux to the localization English.
+- I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface
+
+# Install
+
+```git clone --recursive https://github.com/cehberlin/photobooth.git```
+
 ## Dependencies
 
-```sudo apt install python-piggyphoto python-pygame python-yaml pmount```
+```sudo apt install python-pygame python-yaml pmount```
 
 ### gphoto2-cffi
 
@@ -42,7 +50,7 @@ sudo python setup.py install
 Disable the GPhoto2 Volumen Monitor
 ```disable_gphoto2_gvfs.sh```
 
-## Update localization
+### Update localization
 
 1. Extract strings
 ```
