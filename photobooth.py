@@ -603,7 +603,7 @@ class StateFilter(PhotoBoothState):
         if self.apply_photo_filter(filter_file, idx):
 
             photo_obj = pygame.image.load(filter_file)
-
+            
             return photo_obj, filter_file
 
         else:
@@ -640,8 +640,13 @@ class StateFilter(PhotoBoothState):
         Create small thumbnail preview filtered photos
         """
         last_photo = self.photobooth.last_photo_resized
-        scaled_original_photo = (pygame.transform.scale(last_photo[0], self._picture_size), last_photo[1])
 
+        small_size = pygame.transform.scale(last_photo[0], self._picture_size)
+        #mirror in order match other visualization
+        mirrored_photo = pygame.transform.flip(small_size,True,False)
+        
+        scaled_original_photo = (mirrored_photo, last_photo[1])
+       
         self.filter_photos = [
             scaled_original_photo,
             self.filter_photo_preview(photo=scaled_original_photo, idx=1),
