@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2017-07-23 17:18+0200\n"
-"PO-Revision-Date: 2017-07-23 17:18+0200\n"
+"POT-Creation-Date: 2017-09-22 22:46+0200\n"
+"PO-Revision-Date: 2017-09-22 22:46+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -17,177 +17,187 @@ msgstr ""
 "X-Generator: Poedit 2.0.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: photobooth.py:254
-msgid "Camera not connected: "
-msgstr "Camera not connected: "
+#: photobooth.py:262
+msgid "Camera not connected:"
+msgstr "Camera not connected:"
 
-#: photobooth.py:286
+#: photobooth.py:300
 msgid "Slideshow, press any button to continue"
 msgstr "Slideshow, press any button to continue"
 
-#: photobooth.py:343
+#: photobooth.py:374
 msgid "Slideshow"
 msgstr "Slideshow"
 
-#: photobooth.py:345 photobooth.py:503
+#: photobooth.py:376 photobooth.py:553
 msgid "Print"
 msgstr "Print"
 
-#: photobooth.py:345 photobooth.py:662 photobooth.py:852
+#: photobooth.py:376 photobooth.py:718 photobooth.py:928
 msgid "Next"
 msgstr "Next"
 
-#: photobooth.py:345 photobooth.py:662 photobooth.py:852
+#: photobooth.py:376 photobooth.py:718 photobooth.py:928
 msgid "Prev"
 msgstr "Prev"
 
-#: photobooth.py:345 photobooth.py:704
+#: photobooth.py:376 photobooth.py:774
 msgid "Return"
 msgstr "Return"
 
-#: photobooth.py:374
+#: photobooth.py:411
 msgid "Photo"
 msgstr "Photo"
 
-#: photobooth.py:419 photobooth.py:503 photobooth.py:662 photobooth.py:858
+#: photobooth.py:467 photobooth.py:553 photobooth.py:718 photobooth.py:934
 msgid "Cancel"
 msgstr "Cancel"
 
-#: photobooth.py:432
+#: photobooth.py:480
 msgid "Smile :-)"
 msgstr "Smile :-)"
 
-#: photobooth.py:489
+#: photobooth.py:539
 msgid "Print failure:"
 msgstr "Print failure:"
 
-#: photobooth.py:493
+#: photobooth.py:543
 msgid "Please wait, printing ..."
 msgstr "Please wait, printing ..."
 
-#: photobooth.py:502
+#: photobooth.py:552
 msgid "Print photo?"
 msgstr "Print photo?"
 
-#: photobooth.py:630
+#: photobooth.py:686
 msgid "Selected"
 msgstr "Selected"
 
-#: photobooth.py:660
+#: photobooth.py:716
 msgid "Select photo?"
 msgstr "Select photo?"
 
-#: photobooth.py:662 photobooth.py:852
+#: photobooth.py:718 photobooth.py:928
 msgid "Select"
 msgstr "Select"
 
-#: photobooth.py:668 photobooth.py:676
+#: photobooth.py:723
+msgid "Please wait, processing"
+msgstr "Please wait, processing"
+
+#: photobooth.py:746
 msgid "Please wait, processing ..."
 msgstr "Please wait, processing ..."
 
-#: photobooth.py:705
+#: photobooth.py:775
 msgid "Toggle fullscreen"
 msgstr "Toggle fullscreen"
 
-#: photobooth.py:706
+#: photobooth.py:776
 msgid "Enable/Disable state ShowPhoto"
 msgstr "Enable/Disable state ShowPhoto"
 
-#: photobooth.py:707
+#: photobooth.py:777
 msgid "Enable/Disable state Filter"
 msgstr "Enable/Disable state Filter"
 
-#: photobooth.py:708
+#: photobooth.py:778
 msgid "Enable/Disable state Printing"
 msgstr "Enable/Disable state Printing"
 
-#: photobooth.py:709
+#: photobooth.py:779
 msgid "Close photobooth"
 msgstr "Close photobooth"
 
-#: photobooth.py:710
+#: photobooth.py:780
 msgid "Shutdown all"
 msgstr "Shutdown all"
 
-#: photobooth.py:711
+#: photobooth.py:781
 msgid "Shutdown photobooth"
 msgstr "Shutdown photobooth"
 
-#: photobooth.py:712
-msgid "Start printer"
-msgstr "Start printer"
+#: photobooth.py:782
+msgid "Create new photo directory"
+msgstr "Create new photo directory"
 
-#: photobooth.py:713
+#: photobooth.py:784
 msgid "Stop printer"
 msgstr "Stop printer"
 
-#: photobooth.py:714
+#: photobooth.py:785
 msgid "Mount/Umount USB storage"
 msgstr "Mount/Umount USB storage"
 
-#: photobooth.py:775 photobooth.py:782 photobooth.py:788 photobooth.py:796
+#: photobooth.py:851 photobooth.py:858 photobooth.py:864 photobooth.py:872
 msgid "WiFi not found"
 msgstr "WiFi not found"
 
-#: photobooth.py:811
+#: photobooth.py:887
 msgid "Administration"
 msgstr "Administration"
 
-#: photobooth.py:814
+#: photobooth.py:890
 msgid "Fullscreen: "
 msgstr "Fullscreen: "
 
-#: photobooth.py:817
+#: photobooth.py:893
 msgid "Free space: "
 msgstr "Free space: "
 
-#: photobooth.py:819
+#: photobooth.py:895
 msgid "Network: "
 msgstr "Network: "
 
-#: photobooth.py:822
+#: photobooth.py:898
 msgid "IP: "
 msgstr "IP: "
 
-#: photobooth.py:824
+#: photobooth.py:900
 msgid "Printer available: "
 msgstr "Printer available: "
 
-#: photobooth.py:826
+#: photobooth.py:902
 msgid "Photo directory: "
 msgstr "Photo directory: "
 
-#: photobooth.py:829
+#: photobooth.py:905
 msgid "Taken photos: "
 msgstr "Taken photos: "
 
-#: photobooth.py:832
+#: photobooth.py:908
 msgid "State 'ShowPhotos' enabled: "
 msgstr "State 'ShowPhotos' enabled: "
 
-#: photobooth.py:836
+#: photobooth.py:912
 msgid "State 'Filter' enabled: "
 msgstr "State 'Filter' enabled: "
 
-#: photobooth.py:841
+#: photobooth.py:917
 msgid "State 'Printing' enabled: "
 msgstr "State 'Printing' enabled: "
 
-#: photobooth.py:846
+#: photobooth.py:922
 msgid "Select option:"
 msgstr "Select option:"
 
-#: photobooth.py:852
+#: photobooth.py:928
 msgid "Back"
 msgstr "Back"
 
-#: photobooth.py:858
+#: photobooth.py:934
 msgid "Accept"
 msgstr "Accept"
 
-#: photobooth.py:1008
+#: photobooth.py:1084
 msgid "Error"
 msgstr "Error"
+
+#~ msgid "Camera not connected: "
+#~ msgstr "Camera not connected: "
+
+#~ msgid "Start printer"
+#~ msgstr "Start printer"
 
 #~ msgid "Last Photo:"
 #~ msgstr "Last Photo:"
