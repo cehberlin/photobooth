@@ -50,6 +50,14 @@ sudo python setup.py install
 Disable the GPhoto2 Volumen Monitor
 ```disable_gphoto2_gvfs.sh```
 
+### Autostart
+
+Add following line (or similar depending on your environment) to
+
+`@bash /home/pi/photobooth/photobooth.sh`
+
+to `/home/pi/.config/lxsession/LXDE-pi/autostart`
+
 ### Update localization
 
 1. Extract strings
