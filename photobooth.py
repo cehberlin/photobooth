@@ -722,7 +722,7 @@ class StateFilter(PhotoBoothState):
         while self._is_processing:
             draw_wait_box(self.photobooth.screen, _("Please wait, processing") + '.' * point_count)
             point_count +=1
-            point_count = point_count % 3
+            point_count = point_count % 4
             time.sleep(1)
 
     def filter_selected_photo(self):
