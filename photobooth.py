@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import time
+from threading import Thread
 import glob
 import random
 import os
@@ -565,6 +566,7 @@ class StateFilter(PhotoBoothState):
         self._picture_size = ()
         self._current_filter_idx = 0
         self._filter_count = 4
+        self._is_processing = False
 
     def filter_photo_fullsize(self, photo, idx, dest):
         """
@@ -715,14 +717,28 @@ class StateFilter(PhotoBoothState):
 
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
 
+    def _wait_worker(self):
+        point_count = 0
+        while self._is_processing:
+            draw_wait_box(self.photobooth.screen, _("Please wait, processing") + '.' * point_count)
+            point_count +=1
+            point_count = point_count % 3
+            time.sleep(1)
+
     def filter_selected_photo(self):
         # create final file name
         path, ext = os.path.splitext(self.photobooth.last_photo[1])
         filter_file = path + '_filtered' + ext
-        draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
+
+        t = Thread(target=self._wait_worker)
+        self._is_processing = True
+        t.start()
+
         # redo filtering on full image resolution
         self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo,
                                                                 idx=self._current_filter_idx, dest=filter_file)
+        self._is_processing = False
+        t.join()
 
     def reset(self):
         super(StateFilter, self).reset()
