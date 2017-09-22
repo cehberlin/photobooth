@@ -8,7 +8,7 @@ import gettext
 import traceback
 import yaml
 import sys
-import datetime
+from datetime import datetime
 from subprocess import check_output
 
 #Own modules
@@ -771,7 +771,7 @@ class StateAdmin(PhotoBoothState):
 
     def create_new_image_dir(self):
         if self.photobooth.photo_directory == self.photobooth.config['photo_directory']:
-            os.rename(self.photobooth.photo_directory, self.photobooth.photo_directory + str(datetime.now()).replace(':','-'))
+            os.rename(self.photobooth.photo_directory, self.photobooth.photo_directory + '-' + str(datetime.now()).replace(':','-'))
             os.makedirs(self.photobooth.photo_directory)
 
     def enable_input(self):
