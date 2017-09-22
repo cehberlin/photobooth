@@ -8,6 +8,7 @@ import gettext
 import traceback
 import yaml
 import sys
+import datetime
 from subprocess import check_output
 
 #Own modules
@@ -757,10 +758,16 @@ class StateAdmin(PhotoBoothState):
             (_("Close photobooth"), self.photobooth.close),
             (_("Shutdown all"), self.shutdown_all),
             (_("Shutdown photobooth"), self.shutdown_phootbooth),
-            (_("Start printer"), self.start_printer),
+            (_("Create new photo directory"), self.create_new_image_dir),
+            #(_("Start printer"), self.start_printer), Wake-On-Lan not working with Win10
             (_("Stop printer"), self.stop_printer),
             (_("Mount/Umount USB storage"), self.toggle_usb_storage),
         ]
+
+    def create_new_image_dir(self):
+        if self.photobooth.photo_directory == self.photobooth.config['photo_directory']:
+            os.rename(self.photobooth.photo_directory, self.photobooth.photo_directory + str(datetime.now()).replace(':','-'))
+            os.makedirs(self.photobooth.photo_directory)
 
     def enable_input(self):
         self.input_handling = True
