@@ -34,7 +34,7 @@ MAX_PREVIEW_FAILURE_CNT = 10
 
 def draw_wait_box(screen, text):
     draw_text_box(screen=screen, text=text, pos=(None, None),
-                  size=INFO_FONT_SIZE)
+                  size=INFO_FONT_SIZE, border_color=COLOR_GREY)
     pygame.display.update()
 
 class PhotoBoothState(object):
@@ -50,6 +50,7 @@ class PhotoBoothState(object):
         self.counter_callback_args = counter_callback_args
         self.counter_sleep_time = 1
         self.enabled = False
+        self._is_processing = False
         self.reset()
 
     def reset(self):
@@ -110,6 +111,35 @@ class PhotoBoothState(object):
 
     def switch_last(self):
         self.switch_state(self.photobooth.last_state)
+
+    def _enable_wait_message(self):
+        """
+        create a thread that shows a wait message
+        :return: thread
+        """
+        t = Thread(target=self._wait_worker)
+        self._is_processing = True
+        t.start()
+        return t
+
+    def _disable_wait_message(self, thead):
+        """
+        Disables the wait message
+        :param thead: need the returned thead of _enable_wait_message
+        """
+        self._is_processing = False
+        thead.join()
+
+    def _wait_worker(self):
+        """
+        worker function for the wait thread
+        """
+        point_count = 0
+        while self._is_processing:
+            draw_wait_box(self.photobooth.screen, _("Please wait, processing") + '.' * point_count)
+            point_count += 1
+            point_count = point_count % 4
+            time.sleep(1)
 
 
 class PhotoBooth(object):
@@ -540,12 +570,13 @@ class StatePrinting(PhotoBoothState):
             show_text_left(self.photobooth.screen, self._error_txt, (20, 270), size=INFO_FONT_SIZE, color=COLOR_ORANGE)
 
         if self.photobooth.event_manager.mouse_pressed() or self.photobooth.io_manager.accept_button_pressed():
-            draw_wait_box(screen=self.photobooth.screen, text=_("Please wait, printing ..."))
+            wait_thread = self._enable_wait_message()
             if self.print_photo(self.photobooth.last_photo[1]):
                 self.switch_next()
                 self._error_txt = None
             else: # failure
                 self.reset()  # reset timeout counter
+            self._disable_wait_message(wait_thread)
         elif self.photobooth.io_manager.cancel_button_pressed():
             self.switch_next()
 
@@ -566,7 +597,7 @@ class StateFilter(PhotoBoothState):
         self._picture_size = ()
         self._current_filter_idx = 0
         self._filter_count = 4
-        self._is_processing = False
+
 
     def filter_photo_fullsize(self, photo, idx, dest):
         """
@@ -717,33 +748,22 @@ class StateFilter(PhotoBoothState):
 
         draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
 
-    def _wait_worker(self):
-        point_count = 0
-        while self._is_processing:
-            draw_wait_box(self.photobooth.screen, _("Please wait, processing") + '.' * point_count)
-            point_count +=1
-            point_count = point_count % 4
-            time.sleep(1)
 
     def filter_selected_photo(self):
         # create final file name
         path, ext = os.path.splitext(self.photobooth.last_photo[1])
         filter_file = path + '_filtered' + ext
 
-        t = Thread(target=self._wait_worker)
-        self._is_processing = True
-        t.start()
-
+        wait_thread = self._enable_wait_message()
         # redo filtering on full image resolution
         self.photobooth.last_photo = self.filter_photo_fullsize(photo=self.photobooth.last_photo,
                                                                 idx=self._current_filter_idx, dest=filter_file)
-        self._is_processing = False
-        t.join()
+        self._disable_wait_message(wait_thread)
 
     def reset(self):
         super(StateFilter, self).reset()
 
-        draw_wait_box(self.photobooth.screen, _("Please wait, processing ..."))
+        wait_thread = self._enable_wait_message()
         self._current_filter_idx = 0
         self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
         self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
@@ -754,6 +774,7 @@ class StateFilter(PhotoBoothState):
 
         if self.photobooth.last_photo_resized:
             self.create_filtered_photo_collection()
+        self._disable_wait_message(wait_thread)
 
 
 class StateAdmin(PhotoBoothState):
