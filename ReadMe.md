@@ -2,7 +2,7 @@
 
 http://www.ceh-photo.de
 
-This is a modular photobooth software written in Python using pygame, which is suppose to run on a Linux computer (I have used a Raspberry Pi 3) and controls a camera with GPhoto2 interface. I have tested and used it with two Nikon DSLRs (D5100, D7100). Adapating the software to other cameras like Canon cameras should not be a big problem due to the modular code structure. It was developed for my own wedding party and was a great fun and resulted in unforgetable photos.
+This is a modular photobooth software written in Python using pygame, which is suppose to run on a Linux computer (I have used a Raspberry Pi 3) and controls a camera with GPhoto2 interface. I have tested and used it with two Nikon DSLRs (D5100, D7100). Adapating the software to other cameras like Canon cameras should not be a big problem due to the modular code structure. It was developed for my own wedding party and was a great fun and resulted in unforgetable photos. However, due to its great success the machine has been further developed and tweaked and also was further used on two more weddings and two birthday parties.
 
 # Features
 - Display Live Preview (automatically enabling, disabling autofocus)
@@ -10,15 +10,23 @@ This is a modular photobooth software written in Python using pygame, which is s
 - External Push Buttons, the concept it based on the availability of 4 colorful pushbuttons.
 - Applying fancy filters (implemented using Imagemagick), selectable by the user
 - Configurable and modular (e.g. you can disable printing, filtering ...)
-- Automated printing (current version uses an additional Windows computer for priting interfaced through provided python printing service as my printer did not work well in Linux, Replacing this interface with something based on `lp` is a minor adjustment)
-- Multi-Language suppport (currently German and English)
-- Slideshow mode
+- Automated printing (current version uses an additional Windows computer for printing interfaced through provided python printing service as my printer did not work well in Linux, Replacing this interface with something based on `lp` is a minor adjustment)
+- Multi-Language suppport: Currently available are German and English
+- 2 Slideshow modes
+   - Simple: Just randomly showing former taken photos
+   - Advanced: Randomly showing former taken photos + allowing to go backward, forward and select photos again for printing
 - Support for different Gphoto2 interfaces (gphoto2-cffi, piggyphoto, commandline-based)
 - Modes for testing and development that can be used without any camera or buttons
+- Administation menu
+  - Show information about left disk space, IP address, printer status etc.
+  - Switching from local photo directory to a flash drive (etc. usb stick) from the 
+  - Creating new photo directory (refreshes currently shown photos in the slideshow)
+  - Enable/Disable full screen mode
+  - Shutdown entire system (including remote printer windows, if this is used) or just the current machine (RASPI)
 
 # Requirements and Hints
 - Gphoto2 interface is localized in some parts and this has influence on the name of some configuration options etc. This software expects an English interface, hence you should set your Photobooth Linux to the localization English.
-- I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface
+- I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface (this API is frequently using a new process, hence memory does not become a problem).
 
 # Install
 
@@ -66,7 +74,7 @@ pygettext -d photobooth photobooth.py
 
 ```
 
-2. Open old localization files with poedit
+2. Open old localization files with poedit (`sudo apt install poedit`)
 
 locale/en/LC_MESSAGES/photobooth.po
 locale/de/LC_MESSAGES/photobooth.po
