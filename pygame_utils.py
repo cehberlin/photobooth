@@ -1,4 +1,5 @@
 import pygame
+from pygame.gfxdraw import filled_circle, aacircle
 
 DEFAULT_FONT_SIZE = 72
 
@@ -89,10 +90,14 @@ def draw_rect(screen, pos, size, color=COLOR_GREY, color_border=None, size_borde
     if color_border:
         pygame.draw.rect(screen, color_border, (pos[0], pos[1], size[0], size[1]),size_border)
 
+
 def draw_circle(screen, pos, size, color, color_border=None, size_border = 1):
-    pygame.draw.circle(screen, color, pos, size)
     if color_border:
-        pygame.draw.circle(screen, color_border, pos, size, size_border)
+        if size_border > 1:
+            filled_circle(screen, pos[0], pos[1], size + size_border, color_border)
+        aacircle(screen, pos[0], pos[1], size + size_border, color_border)
+    filled_circle(screen, pos[0], pos[1], size, color)
+
 
 def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10, size_border=1):
     """
