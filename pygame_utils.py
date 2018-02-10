@@ -12,6 +12,7 @@ COLOR_BLUE =(0,0,255)
 COLOR_ORANGE = (210,105,30)
 COLOR_DARK_GREY = (105, 105, 105)
 
+
 class PyGameEventManager(object):
     """
     Classes caches and simplifies pygame event management

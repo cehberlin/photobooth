@@ -38,8 +38,24 @@ def draw_wait_box(screen, text):
     pygame.display.update()
 
 class PhotoBoothState(object):
+    """
+    The photobooth application is implemented as state machine, this class represents one photo state.
+    States are switched using a count down timmer (counter in seconds) or switching is triggered manually
+    with the switch_* methods. A specific state implementation inherits from this class and implements its logic
+    either in the counter_callback handler or in the update_callback function or both. The update is periodically
+    triggered by the main application.
+    """
 
     def __init__(self, photobooth, next_state, failure_state=None, counter_callback=None, counter_callback_args=None, counter=-1):
+        """
+        :param photobooth: Reference to the main application
+        :type photobooth: PhotoBooth
+        :param next_state: the next state to switch to
+        :param failure_state: a state we switch to in case of exceptions
+        :param counter_callback: callback function that is executed once the counter exceeded
+        :param counter_callback_args: optional arguments for the callback function
+        :param counter: count down timer in seconds
+        """
         self.photobooth = photobooth
         self.next_state = next_state
         self.inital_counter = counter
@@ -63,9 +79,16 @@ class PhotoBoothState(object):
         self.counter = value
 
     def update_callback(self, photobooth):
+        """
+        Override this function for periodic checks updates in the state (e.g. drawing, button pressing etc.)
+        :param photobooth: reference to the photobooth main app to easily access screen, inputs etc.
+        """
         pass
 
     def update(self):
+        """
+        Main update life cycle function
+        """
         try:
             self.update_callback()
             self.update_counter()
@@ -79,6 +102,10 @@ class PhotoBoothState(object):
             return
 
     def update_counter(self):
+        """
+        function that updates the interal count down timer and calls the counter callback function when the counter
+        expires
+        """
 
         if self.counter > 0:
             now = time.time()
@@ -98,18 +125,37 @@ class PhotoBoothState(object):
         return False
 
     def is_counter_expired(self):
+        """
+        Check if the count down counter is expired
+        :return: True if it is expired
+        """
         return self.counter == 0
 
     def is_counter_enabled(self):
+        """
+        Check if the count down counter is enabled
+        :return: True if it is enabled
+        """
         return self.counter > -1
 
     def switch_state(self, state):
+        """
+        Switch to the given state object
+        :param state: new state object
+        :type state: PhotoBoothState
+        """
         self.photobooth.state = state
 
     def switch_next(self):
+        """
+        Switch to the next state
+        """
         self.switch_state(self.next_state)
 
     def switch_last(self):
+        """
+        Switch to the last state
+        """
         self.switch_state(self.photobooth.last_state)
 
     def _enable_wait_message(self):
@@ -143,6 +189,18 @@ class PhotoBoothState(object):
 
 
 class PhotoBooth(object):
+    """
+    This is the main application class. It holds all important object references and runs the main application life
+    cycle.
+    Important objects in this class:
+    state: the current state of the photobooth state machine
+    cam: The camera object
+    screen: The pygame screen for drawing
+    event_manager: Cache/handler for pygame events like button presses, mouse clicks etc
+    io_manager: Handling and enbaling ALL user input output, like external buttons, leds etc
+    config: Access configuration values
+    """
+
     def __init__(self, config):
 
         self.cam = None
