@@ -31,6 +31,8 @@ INFO_TEXT_Y_POS = 100
 
 MAX_PREVIEW_FAILURE_CNT = 10
 
+BUTTON_BAR_Y_OFFSET = 80
+
 
 def draw_wait_box(screen, text):
     draw_text_box(screen=screen, text=text, pos=(None, None),
@@ -385,7 +387,8 @@ class StateShowSlideShow(PhotoBoothState):
 
         self.photobooth.io_manager.show_led_coutdown(self.counter)
 
-        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"), pos=(None, self.photobooth.app_resolution[1]-80), size=INFO_FONT_SIZE)
+        draw_text_box(screen=self.photobooth.screen, text=_("Slideshow, press any button to continue"),
+                      pos=(None, self.photobooth.app_resolution[1]-BUTTON_BAR_Y_OFFSET), size=INFO_FONT_SIZE)
 
     def draw_logo(self, logo):
         offset = 15
@@ -462,7 +465,7 @@ class StateAdvancedSlideShow(StateShowSlideShow):
         draw_text_box(screen=self.photobooth.screen, text=_("Slideshow"), pos=(40, 40), size=CAPTION_FONT_SIZE)
 
         draw_button_bar(self.photobooth.screen, text=[_("Return"), _("Prev"), _("Next"), _("Print")],
-                        pos=(None, self.photobooth.app_resolution[1] - 60))
+                        pos=(None, self.photobooth.app_resolution[1] - BUTTON_BAR_Y_OFFSET))
 
 
 class StateWaitingForPhotoTrigger(PhotoBoothState):
@@ -496,7 +499,8 @@ class StateWaitingForPhotoTrigger(PhotoBoothState):
         else:
             self._preview_failure_cnt += 1
 
-        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")], pos=(None,self.photobooth.app_resolution[1]-60))
+        draw_button_bar(self.photobooth.screen, text=[_("Photo"),_("Photo"),_("Photo"),_("Photo")],
+                        pos=(None,self.photobooth.app_resolution[1]-BUTTON_BAR_Y_OFFSET))
         self.photobooth.io_manager.set_all_led(LedState.ON) #TODO maybe not necessary, but needs to be tested
 
     def _switch_timeout_state(self):
@@ -553,7 +557,7 @@ class StatePhotoTrigger(PhotoBoothState):
 
             #cancel photo if necessary
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
-                            pos=(None, self.photobooth.app_resolution[1] - 60))
+                            pos=(None, self.photobooth.app_resolution[1] - BUTTON_BAR_Y_OFFSET))
         if self.photobooth.io_manager.cancel_button_pressed():
             self.photobooth.cam.disable_live_autofocus()
             self.switch_last()
@@ -639,7 +643,8 @@ class StatePrinting(PhotoBoothState):
             self.switch_next()
 
         draw_text_box(screen=self.photobooth.screen, text=_("Print photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
-        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")], pos=(None, self.photobooth.app_resolution[1] - 60))
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Print")],
+                        pos=(None, self.photobooth.app_resolution[1] - BUTTON_BAR_Y_OFFSET))
      
     def reset(self):
         super(StatePrinting, self).reset()
@@ -804,7 +809,8 @@ class StateFilter(PhotoBoothState):
 
         draw_text_box(screen=self.photobooth.screen, text=_("Select photo?"), pos=(None, INFO_TEXT_Y_POS), size=INFO_FONT_SIZE)
 
-        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
+        draw_button_bar(self.photobooth.screen, text=[_("Cancel"), _("Prev"), _("Next"), _("Select")],
+                        pos=(None,self.photobooth.app_resolution[1]-BUTTON_BAR_Y_OFFSET))
 
 
     def filter_selected_photo(self):
@@ -1004,13 +1010,15 @@ class StateAdmin(PhotoBoothState):
         show_text_left(self.photobooth.screen, self._options[self._current_option_idx][0], (x_pos, y_pos), size=INFO_FONT_SIZE, color=COLOR_GREEN)
 
         if not self._request_confirmation:
-            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")], pos=(None,self.photobooth.app_resolution[1]-60))
+            draw_button_bar(self.photobooth.screen, text=[_("Back"), _("Prev"), _("Next"), _("Select")],
+                            pos=(None,self.photobooth.app_resolution[1]-BUTTON_BAR_Y_OFFSET))
         y_pos += 60
         #Confirmation request
         if self._request_confirmation:
             show_text_left(self.photobooth.screen, "Please confirm selection: " + self._options[self._current_option_idx][0],
                            (x_pos, y_pos), INFO_SMALL_FONT_SIZE, color=COLOR_DARK_GREY)
-            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")], pos=(None,self.photobooth.app_resolution[1]-60))
+            draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", _("Accept")],
+                            pos=(None,self.photobooth.app_resolution[1]-BUTTON_BAR_Y_OFFSET))
 
         #Error
         show_text_left(self.photobooth.screen, self._error_text, (x_pos, y_pos),
