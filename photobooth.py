@@ -183,10 +183,13 @@ class PhotoBoothState(object):
         worker function for the wait thread
         """
         point_count = 0
+        led_counter = 0
         while self._is_processing:
             draw_wait_box(self.photobooth.screen, _("Please wait, processing") + '.' * point_count)
             point_count += 1
+            led_counter += 1
             point_count = point_count % 4
+            self.photobooth.io_manager.show_led_coutdown(led_counter)
             time.sleep(1)
 
 
