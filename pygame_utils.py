@@ -97,7 +97,9 @@ def draw_circle(screen, pos, size, color, color_border=None, size_border = 1):
         if size_border > 1:
             filled_circle(screen, pos[0], pos[1], size + size_border, color_border)
         aacircle(screen, pos[0], pos[1], size + size_border, color_border)
-    filled_circle(screen, pos[0], pos[1], size, color)
+    # inner color circle
+        filled_circle(screen, pos[0], pos[1], size, color)
+    aacircle(screen, pos[0], pos[1], size, color)
 
 
 def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DARK_GREY, box_color=COLOR_GREY, border_color=COLOR_WHITE, margin=10, size_border=1):
