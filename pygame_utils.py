@@ -161,7 +161,7 @@ def show_text_left(screen, text, pos, size=DEFAULT_FONT_SIZE,  color=COLOR_WHITE
     screen.blit(txt_img,pos)
 
 
-def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=30):
+def draw_button_bar(screen, text=["","","",""], pos=(None,None), radius=50, font_size=32, margin=80):
     pos_x = pos[0]
     pos_y = pos[1]
 
