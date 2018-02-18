@@ -4,6 +4,8 @@ http://www.ceh-photo.de
 
 This is a modular photobooth software written in Python using pygame, which is suppose to run on a Linux computer (I have used a Raspberry Pi 3) and controls a camera with GPhoto2 interface. I have tested and used it with two Nikon DSLRs (D5100, D7100). Adapating the software to other cameras like Canon cameras should not be a big problem due to the modular code structure. It was developed for my own wedding party and was a great fun and resulted in unforgetable photos. However, due to its great success the machine has been further developed and tweaked and also was further used on two more weddings and two birthday parties.
 
+[![Alt text for your video](https://img.youtube.com/vi/bq0OTCdGc0w/0.jpg)](http://www.youtube.com/watch?v=bq0OTCdGc0w)
+
 # Features
 - Display Live Preview (automatically enabling, disabling autofocus)
 - Photo countdown
