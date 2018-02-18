@@ -6,11 +6,11 @@ This is a modular photobooth software written in Python using pygame, which is s
 
 # Features
 - Display Live Preview (automatically enabling, disabling autofocus)
-- Photo Countdown
-- External Push Buttons, the concept it based on the availability of 4 colorful pushbuttons.
-- Applying fancy filters (implemented using Imagemagick), selectable by the user
-- Configurable and modular (e.g. you can disable printing, filtering ...)
-- Automated printing (current version uses an additional Windows computer for printing interfaced through provided python printing service as my printer did not work well in Linux, Replacing this interface with something based on `lp` is a minor adjustment)
+- Photo countdown
+- External push buttons, the interaction concept it based on the availability of 4 colorful push buttons.
+- Applying fancy filters inspired by Instagram (implemented using Imagemagick), selectable by the user
+- Configurable and modular (e.g. you can disable printing, filtering, set countdown, and timeouts ...)
+- Automated printing (current version uses an additional Windows embedded computer for printing. This Windows PC is interfaced through a provided python printing service. This was necessary because my printer did not work well in Linux. Replacing this interface with something based on `lp` is a minor adjustment)
 - Multi-Language suppport: Currently available are German and English
 - 2 Slideshow modes
    - Simple: Just randomly showing former taken photos
@@ -26,7 +26,7 @@ This is a modular photobooth software written in Python using pygame, which is s
 
 # Requirements and Hints
 - Gphoto2 interface is localized in some parts and this has influence on the name of some configuration options etc. This software expects an English interface, hence you should set your Photobooth Linux to the localization English.
-- I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface (this API is frequently using a new process, hence memory does not become a problem).
+- I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface. My API is frequently using a new process, hence memory does not become a problem.
 
 # Install
 

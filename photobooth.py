@@ -556,7 +556,8 @@ class StatePhotoTrigger(PhotoBoothState):
             else:
                 self._preview_failure_cnt += 1
             # Show countdown
-            show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE)
+            show_text_mid(self.photobooth.screen, str(self.counter), self._mid_position, COUNTER_FONT_SIZE, COLOR_WHITE,
+                          shadow_size=16)
 
             #cancel photo if necessary
             draw_button_bar(self.photobooth.screen, text=[_("Cancel"), "", "", ""],
@@ -783,10 +784,13 @@ class StateFilter(PhotoBoothState):
             draw_text_box(screen=self.photobooth.screen, text=_("Selected"), pos= selected_image_text_pos,
                           size=INFO_FONT_SIZE, box_color=None, border_color=COLOR_ORANGE, size_border=5, text_color=COLOR_ORANGE)
 
-    def draw_selected(self):
-        pass
-
     def update_callback(self):
+
+        # sometimes this can be reset from other threads, hence better set always
+        self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
+        self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.ON)
 
         self.draw_filtered_photos()
 
@@ -832,10 +836,6 @@ class StateFilter(PhotoBoothState):
 
         wait_thread = self._enable_wait_message()
         self._current_filter_idx = 0
-        self.photobooth.io_manager.set_led(led_type=LedType.GREEN,led_state=LedState.ON)
-        self.photobooth.io_manager.set_led(led_type=LedType.RED, led_state=LedState.ON)
-        self.photobooth.io_manager.set_led(led_type=LedType.BLUE, led_state=LedState.ON)
-        self.photobooth.io_manager.set_led(led_type=LedType.YELLOW, led_state=LedState.ON)
 
         self._picture_size = (self.photobooth.screen.get_size()[0] // 2, self.photobooth.screen.get_size()[1] // 2)
 

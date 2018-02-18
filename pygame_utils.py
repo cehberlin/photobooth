@@ -11,6 +11,7 @@ COLOR_YELLOW = (240,230,140)
 COLOR_BLUE =(0,0,255)
 COLOR_ORANGE = (210,105,30)
 COLOR_DARK_GREY = (105, 105, 105)
+COLOR_BLACK = (0, 0, 0)
 
 
 class PyGameEventManager(object):
@@ -137,16 +138,27 @@ def draw_text_box(screen, text, pos, size=DEFAULT_FONT_SIZE, text_color=COLOR_DA
 
     screen.blit(txt_img,(pos_x,pos_y))
 
-def show_text_mid(screen, text, mid_pos, size=DEFAULT_FONT_SIZE, color=COLOR_WHITE):
+def show_text_mid(screen, text, mid_pos, size=DEFAULT_FONT_SIZE, color=COLOR_WHITE, color_shadow=COLOR_DARK_GREY, shadow_size=0):
     """
     Show text using mid position for entire text
     :param screen:
-    :param text:
-    :param mid_pos:
-    :param size:
-    :return:
+    :param text: text to print
+    :param mid_pos: position from the middle of the text
+    :param size: font size
+    :param color: font color
+    :param color_shadow: color for the shadow
+    :param shadow_size: if shadow_size>0 draw shadow in defined color
     """
     txt_img = get_text_img(text, size, color)
+
+    if shadow_size > 0:
+        outline_txt_img = get_text_img(text, size + shadow_size, color_shadow)
+        diff_x = outline_txt_img.get_width() - txt_img.get_width()
+        diff_y = outline_txt_img.get_height() - txt_img.get_height()
+        screen.blit(outline_txt_img,
+                    (mid_pos[0] + diff_x // 2 - outline_txt_img.get_width() // 2,
+                     mid_pos[1] + diff_y // 2 - outline_txt_img.get_height() // 2))
+
     screen.blit(txt_img,
                 (mid_pos[0] - txt_img.get_width() // 2, mid_pos[1] - txt_img.get_height() // 2))
 
