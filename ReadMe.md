@@ -1,6 +1,6 @@
 # CEH-Photo.de Photobooth
 
-[![The photobooth](hardware/Photobooth.jpg](hardware/Photobooth.jpg)
+![The photobooth](https://github.com/cehberlin/photobooth/blob/master/hardware/Photobooth.jpg)
 
 http://www.ceh-photo.de
 
