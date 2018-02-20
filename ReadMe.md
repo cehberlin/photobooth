@@ -12,7 +12,7 @@ This is a modular photobooth software written in Python using pygame, which is s
 - External push buttons, the interaction concept it based on the availability of 4 colorful push buttons.
 - Applying fancy filters inspired by Instagram (implemented using Imagemagick), selectable by the user
 - Configurable and modular (e.g. you can disable printing, filtering, set countdown, and timeouts ...)
-- Automated printing (current version uses an additional Windows embedded computer for printing. This Windows PC is interfaced through a provided python printing service. This was necessary because my printer did not work well in Linux. Replacing this interface with something based on `lp` is a minor adjustment)
+- Automated printing (current version uses an additional Windows embedded computer for printing. This Windows PC is interfaced through a provided python printing service. This was necessary because my printer did not work well in Linux. Replacing this interface with something based on `lp` is a minor adjustment). The Linux Photobooth software sends images selected for printing through smb.
 - Multi-Language suppport: Currently available are German and English
 - 2 Slideshow modes
    - Simple: Just randomly showing former taken photos
@@ -22,13 +22,32 @@ This is a modular photobooth software written in Python using pygame, which is s
 - Administation menu
   - Show information about left disk space, IP address, printer status etc.
   - Switching from local photo directory to a flash drive (etc. usb stick) from the 
-  - Creating new photo directory (refreshes currently shown photos in the slideshow)
+  - Creating new photo directory (resets currently shown photos in the slideshow)
   - Enable/Disable full screen mode
   - Shutdown entire system (including remote printer windows, if this is used) or just the current machine (RASPI)
 
 # Requirements and Hints
 - Gphoto2 interface is localized in some parts and this has influence on the name of some configuration options etc. This software expects an English interface, hence you should set your Photobooth Linux to the localization English.
 - I had big trouble with several memory leak issues in the gphoto2 library and both corresponding Python interfaces (gphoto2-cffi and piggyphoto), for this reason I developed a gphoto2 commandline-based interface using `popen` that does not suffer this problem due to its process-like interface. My API is frequently using a new process, hence memory does not become a problem.
+
+# My Setup
+- Raspberry PI 3 with 32GB SD card running Raspian
+   - Runs the photobooth application (auto-started)
+   - LCD is connected to RASPI (21" display without touch support)
+   - 4 push buttons provide the interface for the user and are connected to the RASPI through the circuit available here:  https://github.com/cehberlin/photobooth/tree/master/hardware
+- Old Kontron pico-itx Intel Atom mini computer running Windows 10
+   - Canon DS810 photo printer is controled from Windows.
+   - print_service_win.py enables a windows service that prints all images from a designated directory. (The RASPI copies the photos to this directory using SAMBA/smb)
+- Nikon D5100 camera with Nikon ED VR IF 3,5-5,6 18-105mm and external Metz 54 Af-1 N
+
+## Camera configuration
+- In my setup I use a Metz 54 Af-1 N external flash with a softbox connected to the camera with a Nikon SC-28 TTL cable. This allows to make use of the i-TTL matrix measurement of the camera/flash combination to get perfect exposures.
+  - If you use a softbox, I recommend to slighly increase the flash exposure correction for about 0,7-1,0 to correct for the lost light.
+  - I have configured the flash to release on the second curtain to always have sharp faces in case of fast motion within the picture. This can also give you nice light effects if you have some disco lights at your venue.
+- I recommend to use the camera in A-(Aperture)-Mode with preconfigured ISO (if you use an external flash). A reasonable aperture is 5,6 to guarantee that all faces in a group shot are sharply pictured.
+- It is beneficial to use a lens with IF characteristics (no rotation or length motion during autofocus) to avoid any unwanted contact between the lens and the photobooth case. A reasonable focal length seems to be something between 28mm KB to 35mm KB. I have always used the Nikon ED VR IF 3,5-5,6 18-105mm kit lens. It is cheap and provides a good imaging quality.
+  - Do not forget to disable image stabilization for static application if your lens supports it.
+- You need to power your camera from a external power source, running the camera in live preview mode (what we need to do get a preview in the photoboot application) drains your battery fast. You can get cheap replicas for the orginal Nikon power connectors.
 
 # Install
 
