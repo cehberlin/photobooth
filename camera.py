@@ -9,7 +9,7 @@ import subprocess
 import shlex
 
 from utils import GenericClassFactory
-from shutil import copy
+from shutil import copyfile
 from datetime import datetime
 
 from abc import ABCMeta, abstractmethod
@@ -269,7 +269,7 @@ class DummyCamera(AbstractCamera):
 
     def take_photo(self):
         photo_file = self._photo_directory + "/dummy_snap_" +str(datetime.now()).replace(':','-')+ ".jpg"
-        copy(self._tmp_directory + "dummy_snap.jpg", photo_file)
+        copyfile(self._tmp_directory + "dummy_snap.jpg", photo_file)
         return self._photo, photo_file
 
     def __del__(self):
