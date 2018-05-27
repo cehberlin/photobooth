@@ -16,7 +16,9 @@ from subprocess import check_output
 from pygame_utils import *
 from user_io import get_user_io_factory, LedState, LedType
 from camera import get_camera_factory
-from instagram_filters.filters import Gotham,Kelvin,Nashville,Lomo,Toaster,BlackAndWhite
+from instagram_filters.filters import Gotham, Kelvin, Nashville, Lomo, Toaster, BlackAndWhite
+from instagram_filters.decorations import Logo
+from instagram_filters.filter import Filter
 import print_utils
 import storage
 
@@ -614,9 +616,20 @@ class StatePrinting(PhotoBoothState):
         super(StatePrinting, self).__init__(photobooth=photobooth, next_state=next_state, counter=counter, counter_callback=self.switch_next)
         self._error_txt = None
 
+        self.logo_file = self.photobooth.config['print_logo']
+
     def print_photo(self, photo_file):
 
         try:
+            if self.logo_file:
+                printfile = self.photobooth.tmp_dir + "/logo_print_file.jpg"
+                fil = Filter(filename=photo_file, output_filename=printfile)
+                decoration = Logo(logo_path=self.logo_file)
+                fil.add_post_decoration(decoration=decoration)
+                if fil:
+                    fil.apply()
+                    fil.close_image()
+                    photo_file = printfile
             print_utils.print_photo(photo_file=photo_file)
             return True
         except Exception as e:
@@ -653,6 +666,7 @@ class StatePrinting(PhotoBoothState):
     def reset(self):
         super(StatePrinting, self).reset()
 
+
 class StateFilter(PhotoBoothState):
     """
     State for providing several filter options of the photo
@@ -682,8 +696,6 @@ class StateFilter(PhotoBoothState):
         if self.apply_photo_filter(input_file=photo[1], idx=idx, output_file=dest, width=width, height=height):
 
             photo_obj = pygame.image.load(filter_file)
-
-            photo_obj = pygame.transform.scale(photo_obj, self.photobooth.screen.get_size())
 
             return photo_obj, filter_file
         else:
