@@ -30,6 +30,9 @@ class Filter(imagemagick.Convert):
             self.default_params['width'] = width
             self.default_params['height'] = height
 
+        self._post_decorations = []
+        self._pre_decorations = []
+
     def close_image(self):
         if self._image:
             self._image.close()
@@ -60,6 +63,16 @@ class Filter(imagemagick.Convert):
         """
         pass
 
+    def add_post_decoration(self, decoration):
+        self._post_decorations.append(decoration)
+
+    def add_pre_decoration(self, decoration):
+        self._pre_decorations.append(decoration)
+
     def apply(self):
+        for decorator in self._pre_decorations:
+            decorator.apply(filter=self)
         self._filter_callback()
+        for decorator in self._post_decorations:
+            decorator.apply(filter=self)
         super(Filter, self).apply()

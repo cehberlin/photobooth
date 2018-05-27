@@ -8,7 +8,7 @@ class Toaster(Filter):
         self.colortone('#330000', 50, 0)
         self.add_filter_step(process_step_cmd="-modulate 150,80,100 -gamma 1.2 -contrast -contrast")
 
-        Vignette(filter=self).vignette('none', 'LavenderBlush3',crop_factor=1.6);
-        Vignette(filter=self).vignette('#ff9966', 'none',crop_factor=1.6);
+        Vignette('none', 'LavenderBlush3',crop_factor=1.6).apply(filter=self)
+        Vignette('#ff9966', 'none',crop_factor=1.6).apply(filter=self)
 
-        #Border(filter=self).border('white')
+        #Border('white').apply(filter=self)

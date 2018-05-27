@@ -3,9 +3,13 @@ from decoration import Decoration
 
 class Border(Decoration):
 
-    def border(self, color = 'black', width = 20):
-        self._filter.add_filter_step(
+    def __init__(self, color = 'black', width = 20):
+        self.color = color
+        self.width = width
+
+    def apply(self, filter):
+        filter.add_filter_step(
             process_step_cmd="-bordercolor {color} -border {bwidth}x{bwidth}",
-            color = color,
-            bwidth = width
+            color=self.color,
+            bwidth=self.width
         )

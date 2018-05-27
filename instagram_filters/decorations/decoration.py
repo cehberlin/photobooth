@@ -1,9 +1,18 @@
 
+from abc import ABCMeta, abstractmethod
+
 
 class Decoration(object):
     """
-    Base class for all decorations that provides access to the filter object
+    Base class for all decorations
     """
+    __metaclass__ = ABCMeta
 
-    def __init__(self, filter):
-        self._filter=filter
+    @abstractmethod
+    def apply(self, filter):
+        """
+        Override this method to apply an decoration
+        :param filter: The filter that is decorated
+        :return:
+        """
+        pass
