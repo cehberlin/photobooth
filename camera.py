@@ -1,4 +1,3 @@
-import piggyphoto.piggyphoto as piggyphoto
 import pygame
 import time
 import imp
@@ -14,7 +13,6 @@ from datetime import datetime
 
 from abc import ABCMeta, abstractmethod
 from subprocess import Popen, PIPE
-
 
 class AbstractCamera(object):
     """
@@ -83,73 +81,83 @@ def get_camera_factory():
     :return: factory instance
     """
     return camera_factory
+    
+try:
+    imp.find_module('piggyphoto')
+    found_piggyphoto_module = True
+except ImportError:
+    found_piggyphoto_module = False
+    print("Couldn't find piggyphoto module, proceeding without. Run 'git submodule update --init' to clone the necessary submodule if the 'piggyphoto' option is enabled.")
 
+if found_piggyphoto_module:
 
-class PiggyphotoCamera(AbstractCamera):
-    """
-    Class wrapping camera access through piggyphoto gphoto2 library for Nikon DSLR, you probably have to adjust it
-    for other camera brands
-    """
+    import piggyphoto.piggyphoto as piggyphoto
 
-    def __init__(self,  photo_directory, tmp_directory, **kwargs):
+    class PiggyphotoCamera(AbstractCamera):
         """
-        :param photobooth: app instance
-        :param kwargs:
+        Class wrapping camera access through piggyphoto gphoto2 library for Nikon DSLR, you probably have to adjust it
+        for other camera brands
         """
-        self.cam = None
-        self.cam = piggyphoto.Camera(auto_init=True)
-        self._photo_directory = photo_directory
-        self._tmp_directory = tmp_directory
 
-    def set_memory_capture(self):
-        # set capturetarget to memory card
-        config_value = self.cam.config.get_child_by_name("capturetarget")
-        config_value.value = 'Memory card'
-
-    def set_idle(self):
-        self.disable_liveview()
-
-    def disable_liveview(self):
-        config_value = self.cam.config.get_child_by_name("viewfinder")
-        config_value.value = 0
-
-    def get_preview(self):
-        file = self._tmp_directory +'/preview.jpg'
-        cfile = self.cam.capture_preview(destpath=file)
-        cfile.clean()
-        picture = pygame.image.load(file)
-        return picture
-
-    def enable_live_autofocus(self):
-        config_value = self.cam.config.get_child_by_name("liveviewaffocus")
-        config_value.value = 'Full-time-servo AF'
-
-    def disable_live_autofocus(self):
-        config_value = self.cam.config.get_child_by_name("liveviewaffocus")
-        config_value.value = 'Single-servo AF'
-
-    def take_photo(self):
-        """
-        Trigger photo capture
-        TODO it seems like capture_image of the library has a memory leak
-        :return:  tuple of pygame image and path to file
-        """
-        #disable liveview to use better internal autofocus of camera
-        self.disable_liveview()
-        file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
-        self.cam.capture_image(destpath=file)
-        return pygame.image.load(file), file
-
-    def close(self):
-        if self.cam:
-            self.set_idle()
-            self.cam.close()
+        def __init__(self,  photo_directory, tmp_directory, **kwargs):
+            """
+            :param photobooth: app instance
+            :param kwargs:
+            """
             self.cam = None
+            self.cam = piggyphoto.Camera(auto_init=True)
+            self._photo_directory = photo_directory
+            self._tmp_directory = tmp_directory
 
-    def __del__(self):
-        self.close()
+        def set_memory_capture(self):
+            # set capturetarget to memory card
+            config_value = self.cam.config.get_child_by_name("capturetarget")
+            config_value.value = 'Memory card'
 
-camera_factory.register_algorithm("piggyphoto", PiggyphotoCamera)
+        def set_idle(self):
+            self.disable_liveview()
+
+        def disable_liveview(self):
+            config_value = self.cam.config.get_child_by_name("viewfinder")
+            config_value.value = 0
+
+        def get_preview(self):
+            file = self._tmp_directory +'/preview.jpg'
+            cfile = self.cam.capture_preview(destpath=file)
+            cfile.clean()
+            picture = pygame.image.load(file)
+            return picture
+
+        def enable_live_autofocus(self):
+            config_value = self.cam.config.get_child_by_name("liveviewaffocus")
+            config_value.value = 'Full-time-servo AF'
+
+        def disable_live_autofocus(self):
+            config_value = self.cam.config.get_child_by_name("liveviewaffocus")
+            config_value.value = 'Single-servo AF'
+
+        def take_photo(self):
+            """
+            Trigger photo capture
+            TODO it seems like capture_image of the library has a memory leak
+            :return:  tuple of pygame image and path to file
+            """
+            #disable liveview to use better internal autofocus of camera
+            self.disable_liveview()
+            file = self._photo_directory + "/dsc_" + str(datetime.now()).replace(':','-') + ".jpg"
+            self.cam.capture_image(destpath=file)
+            return pygame.image.load(file), file
+
+        def close(self):
+            if self.cam:
+                self.set_idle()
+                self.cam.close()
+                self.cam = None
+
+        def __del__(self):
+            self.close()
+
+    camera_factory.register_algorithm("piggyphoto", PiggyphotoCamera)
 
 #following implementation is optional and only acivated if requirements are fulfilled
 try:
