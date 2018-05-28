@@ -8,7 +8,7 @@ class Logo(Decoration):
     def apply(self, filter):
 
         filter.add_filter_step(
-            process_step_cmd="'{logo}' -gravity NorthEast -geometry +100+100 -composite",
+            process_step_cmd="'{logo}' -gravity NorthEast -geometry +200+150 -composite",
             logo=self.logo_path
         )
 
