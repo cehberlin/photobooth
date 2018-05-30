@@ -36,6 +36,9 @@ This is a modular photobooth software written in Python using pygame, which is s
 - If you want to use the `piggyphoto` interface, you have to run `git submodule update --init` after you have cloned my repo to download the git submodule of my customized `piggyphoto` version.
 
 # My Setup
+
+![The hardware setup](https://github.com/cehberlin/photobooth/blob/master/hardware/hardware_concept.png)
+
 - Raspberry PI 3 with 32GB SD card running Raspian
    - Runs the photobooth application (auto-started)
    - LCD is connected to RASPI (21" display without touch support)
@@ -47,7 +50,7 @@ This is a modular photobooth software written in Python using pygame, which is s
 
 ## Camera configuration
 - In my setup I use a Metz 54 Af-1 N external flash with a softbox connected to the camera with a Nikon SC-28 TTL cable. This allows to make use of the i-TTL matrix measurement of the camera/flash combination to get perfect exposures.
-  - If you use a softbox, I recommend to slightly increase the flash exposure correction for about 0,7-1,0 to correct for the lost light.
+  - If you use a softbox, I recommend to slightly increase the flash exposure correction for about 0,5-1,0 to correct for the lost light.
   - I have configured the flash to release on the second curtain to always have sharp faces in case of fast motion within the picture. This can also give you nice light effects if you have some disco lights at your venue.
 - I recommend to use the camera in A-(Aperture)-Mode with preconfigured ISO (if you use an external flash). A reasonable aperture is 5,6 to guarantee that all faces in a group shot are sharply pictured.
 - It is beneficial to use a lens with IF characteristics (no rotation or length motion during autofocus) to avoid any unwanted contact between the lens and the photobooth case. A reasonable focal length seems to be something between 28mm KB to 35mm KB. I have always used the Nikon ED VR IF 3,5-5,6 18-105mm kit lens. It is cheap and provides a good imaging quality.
@@ -58,11 +61,15 @@ This is a modular photobooth software written in Python using pygame, which is s
 
 ```git clone --recursive https://github.com/cehberlin/photobooth.git```
 
+`--recursive` is required to clone git submodules.
+
 ## Dependencies
 
 ```sudo apt install python-pygame python-yaml pmount```
 
 ### gphoto2-cffi
+
+gphoto2-cffi installation is optional, this is only required if you configure it as camera interface.
 
 if available use 
 
